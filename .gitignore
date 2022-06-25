@@ -1,0 +1,6 @@
+**/target
+**/vendor
+**/go.sum
+**/*.key
+**/node_modules
+**/.cache
