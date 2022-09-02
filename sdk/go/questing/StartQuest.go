@@ -12,37 +12,52 @@ import (
 
 // StartQuest is the `startQuest` instruction.
 type StartQuest struct {
+	QuestProposalIndex *uint64
+	QuestProposalBump  *uint8
+	QuestRecorderBump  *uint8
 
 	// [0] = [WRITE] quest
 	//
 	// [1] = [WRITE, SIGNER] initializer
 	//
-	// [2] = [WRITE] depositTokenAccount
+	// [2] = [WRITE] questProposal
 	//
-	// [3] = [WRITE] pixelballzMint
+	// [3] = [WRITE] questAcc
 	//
-	// [4] = [WRITE] pixelballzTokenAccount
+	// [4] = [WRITE] questRecorder
 	//
-	// [5] = [WRITE] questAcc
+	// [5] = [] systemProgram
 	//
-	// [6] = [WRITE] questor
+	// [6] = [] tokenProgram
 	//
-	// [7] = [WRITE] questee
-	//
-	// [8] = [] systemProgram
-	//
-	// [9] = [] tokenProgram
-	//
-	// [10] = [] rent
+	// [7] = [] rent
 	ag_solanago.AccountMetaSlice `bin:"-"`
 }
 
 // NewStartQuestInstructionBuilder creates a new `StartQuest` instruction builder.
 func NewStartQuestInstructionBuilder() *StartQuest {
 	nd := &StartQuest{
-		AccountMetaSlice: make(ag_solanago.AccountMetaSlice, 11),
+		AccountMetaSlice: make(ag_solanago.AccountMetaSlice, 8),
 	}
 	return nd
+}
+
+// SetQuestProposalIndex sets the "questProposalIndex" parameter.
+func (inst *StartQuest) SetQuestProposalIndex(questProposalIndex uint64) *StartQuest {
+	inst.QuestProposalIndex = &questProposalIndex
+	return inst
+}
+
+// SetQuestProposalBump sets the "questProposalBump" parameter.
+func (inst *StartQuest) SetQuestProposalBump(questProposalBump uint8) *StartQuest {
+	inst.QuestProposalBump = &questProposalBump
+	return inst
+}
+
+// SetQuestRecorderBump sets the "questRecorderBump" parameter.
+func (inst *StartQuest) SetQuestRecorderBump(questRecorderBump uint8) *StartQuest {
+	inst.QuestRecorderBump = &questRecorderBump
+	return inst
 }
 
 // SetQuestAccount sets the "quest" account.
@@ -67,103 +82,70 @@ func (inst *StartQuest) GetInitializerAccount() *ag_solanago.AccountMeta {
 	return inst.AccountMetaSlice.Get(1)
 }
 
-// SetDepositTokenAccountAccount sets the "depositTokenAccount" account.
-func (inst *StartQuest) SetDepositTokenAccountAccount(depositTokenAccount ag_solanago.PublicKey) *StartQuest {
-	inst.AccountMetaSlice[2] = ag_solanago.Meta(depositTokenAccount).WRITE()
+// SetQuestProposalAccount sets the "questProposal" account.
+func (inst *StartQuest) SetQuestProposalAccount(questProposal ag_solanago.PublicKey) *StartQuest {
+	inst.AccountMetaSlice[2] = ag_solanago.Meta(questProposal).WRITE()
 	return inst
 }
 
-// GetDepositTokenAccountAccount gets the "depositTokenAccount" account.
-func (inst *StartQuest) GetDepositTokenAccountAccount() *ag_solanago.AccountMeta {
+// GetQuestProposalAccount gets the "questProposal" account.
+func (inst *StartQuest) GetQuestProposalAccount() *ag_solanago.AccountMeta {
 	return inst.AccountMetaSlice.Get(2)
-}
-
-// SetPixelballzMintAccount sets the "pixelballzMint" account.
-func (inst *StartQuest) SetPixelballzMintAccount(pixelballzMint ag_solanago.PublicKey) *StartQuest {
-	inst.AccountMetaSlice[3] = ag_solanago.Meta(pixelballzMint).WRITE()
-	return inst
-}
-
-// GetPixelballzMintAccount gets the "pixelballzMint" account.
-func (inst *StartQuest) GetPixelballzMintAccount() *ag_solanago.AccountMeta {
-	return inst.AccountMetaSlice.Get(3)
-}
-
-// SetPixelballzTokenAccountAccount sets the "pixelballzTokenAccount" account.
-func (inst *StartQuest) SetPixelballzTokenAccountAccount(pixelballzTokenAccount ag_solanago.PublicKey) *StartQuest {
-	inst.AccountMetaSlice[4] = ag_solanago.Meta(pixelballzTokenAccount).WRITE()
-	return inst
-}
-
-// GetPixelballzTokenAccountAccount gets the "pixelballzTokenAccount" account.
-func (inst *StartQuest) GetPixelballzTokenAccountAccount() *ag_solanago.AccountMeta {
-	return inst.AccountMetaSlice.Get(4)
 }
 
 // SetQuestAccAccount sets the "questAcc" account.
 func (inst *StartQuest) SetQuestAccAccount(questAcc ag_solanago.PublicKey) *StartQuest {
-	inst.AccountMetaSlice[5] = ag_solanago.Meta(questAcc).WRITE()
+	inst.AccountMetaSlice[3] = ag_solanago.Meta(questAcc).WRITE()
 	return inst
 }
 
 // GetQuestAccAccount gets the "questAcc" account.
 func (inst *StartQuest) GetQuestAccAccount() *ag_solanago.AccountMeta {
-	return inst.AccountMetaSlice.Get(5)
+	return inst.AccountMetaSlice.Get(3)
 }
 
-// SetQuestorAccount sets the "questor" account.
-func (inst *StartQuest) SetQuestorAccount(questor ag_solanago.PublicKey) *StartQuest {
-	inst.AccountMetaSlice[6] = ag_solanago.Meta(questor).WRITE()
+// SetQuestRecorderAccount sets the "questRecorder" account.
+func (inst *StartQuest) SetQuestRecorderAccount(questRecorder ag_solanago.PublicKey) *StartQuest {
+	inst.AccountMetaSlice[4] = ag_solanago.Meta(questRecorder).WRITE()
 	return inst
 }
 
-// GetQuestorAccount gets the "questor" account.
-func (inst *StartQuest) GetQuestorAccount() *ag_solanago.AccountMeta {
-	return inst.AccountMetaSlice.Get(6)
-}
-
-// SetQuesteeAccount sets the "questee" account.
-func (inst *StartQuest) SetQuesteeAccount(questee ag_solanago.PublicKey) *StartQuest {
-	inst.AccountMetaSlice[7] = ag_solanago.Meta(questee).WRITE()
-	return inst
-}
-
-// GetQuesteeAccount gets the "questee" account.
-func (inst *StartQuest) GetQuesteeAccount() *ag_solanago.AccountMeta {
-	return inst.AccountMetaSlice.Get(7)
+// GetQuestRecorderAccount gets the "questRecorder" account.
+func (inst *StartQuest) GetQuestRecorderAccount() *ag_solanago.AccountMeta {
+	return inst.AccountMetaSlice.Get(4)
 }
 
 // SetSystemProgramAccount sets the "systemProgram" account.
 func (inst *StartQuest) SetSystemProgramAccount(systemProgram ag_solanago.PublicKey) *StartQuest {
-	inst.AccountMetaSlice[8] = ag_solanago.Meta(systemProgram)
+	inst.AccountMetaSlice[5] = ag_solanago.Meta(systemProgram)
 	return inst
 }
 
 // GetSystemProgramAccount gets the "systemProgram" account.
 func (inst *StartQuest) GetSystemProgramAccount() *ag_solanago.AccountMeta {
-	return inst.AccountMetaSlice.Get(8)
+	return inst.AccountMetaSlice.Get(5)
 }
 
 // SetTokenProgramAccount sets the "tokenProgram" account.
 func (inst *StartQuest) SetTokenProgramAccount(tokenProgram ag_solanago.PublicKey) *StartQuest {
-	inst.AccountMetaSlice[9] = ag_solanago.Meta(tokenProgram)
+	inst.AccountMetaSlice[6] = ag_solanago.Meta(tokenProgram)
 	return inst
 }
 
 // GetTokenProgramAccount gets the "tokenProgram" account.
 func (inst *StartQuest) GetTokenProgramAccount() *ag_solanago.AccountMeta {
-	return inst.AccountMetaSlice.Get(9)
+	return inst.AccountMetaSlice.Get(6)
 }
 
 // SetRentAccount sets the "rent" account.
 func (inst *StartQuest) SetRentAccount(rent ag_solanago.PublicKey) *StartQuest {
-	inst.AccountMetaSlice[10] = ag_solanago.Meta(rent)
+	inst.AccountMetaSlice[7] = ag_solanago.Meta(rent)
 	return inst
 }
 
 // GetRentAccount gets the "rent" account.
 func (inst *StartQuest) GetRentAccount() *ag_solanago.AccountMeta {
-	return inst.AccountMetaSlice.Get(10)
+	return inst.AccountMetaSlice.Get(7)
 }
 
 func (inst StartQuest) Build() *Instruction {
@@ -184,6 +166,19 @@ func (inst StartQuest) ValidateAndBuild() (*Instruction, error) {
 }
 
 func (inst *StartQuest) Validate() error {
+	// Check whether all (required) parameters are set:
+	{
+		if inst.QuestProposalIndex == nil {
+			return errors.New("QuestProposalIndex parameter is not set")
+		}
+		if inst.QuestProposalBump == nil {
+			return errors.New("QuestProposalBump parameter is not set")
+		}
+		if inst.QuestRecorderBump == nil {
+			return errors.New("QuestRecorderBump parameter is not set")
+		}
+	}
+
 	// Check whether all (required) accounts are set:
 	{
 		if inst.AccountMetaSlice[0] == nil {
@@ -193,30 +188,21 @@ func (inst *StartQuest) Validate() error {
 			return errors.New("accounts.Initializer is not set")
 		}
 		if inst.AccountMetaSlice[2] == nil {
-			return errors.New("accounts.DepositTokenAccount is not set")
+			return errors.New("accounts.QuestProposal is not set")
 		}
 		if inst.AccountMetaSlice[3] == nil {
-			return errors.New("accounts.PixelballzMint is not set")
-		}
-		if inst.AccountMetaSlice[4] == nil {
-			return errors.New("accounts.PixelballzTokenAccount is not set")
-		}
-		if inst.AccountMetaSlice[5] == nil {
 			return errors.New("accounts.QuestAcc is not set")
 		}
-		if inst.AccountMetaSlice[6] == nil {
-			return errors.New("accounts.Questor is not set")
+		if inst.AccountMetaSlice[4] == nil {
+			return errors.New("accounts.QuestRecorder is not set")
 		}
-		if inst.AccountMetaSlice[7] == nil {
-			return errors.New("accounts.Questee is not set")
-		}
-		if inst.AccountMetaSlice[8] == nil {
+		if inst.AccountMetaSlice[5] == nil {
 			return errors.New("accounts.SystemProgram is not set")
 		}
-		if inst.AccountMetaSlice[9] == nil {
+		if inst.AccountMetaSlice[6] == nil {
 			return errors.New("accounts.TokenProgram is not set")
 		}
-		if inst.AccountMetaSlice[10] == nil {
+		if inst.AccountMetaSlice[7] == nil {
 			return errors.New("accounts.Rent is not set")
 		}
 	}
@@ -232,56 +218,88 @@ func (inst *StartQuest) EncodeToTree(parent ag_treeout.Branches) {
 				ParentFunc(func(instructionBranch ag_treeout.Branches) {
 
 					// Parameters of the instruction:
-					instructionBranch.Child("Params[len=0]").ParentFunc(func(paramsBranch ag_treeout.Branches) {})
+					instructionBranch.Child("Params[len=3]").ParentFunc(func(paramsBranch ag_treeout.Branches) {
+						paramsBranch.Child(ag_format.Param("QuestProposalIndex", *inst.QuestProposalIndex))
+						paramsBranch.Child(ag_format.Param(" QuestProposalBump", *inst.QuestProposalBump))
+						paramsBranch.Child(ag_format.Param(" QuestRecorderBump", *inst.QuestRecorderBump))
+					})
 
 					// Accounts of the instruction:
-					instructionBranch.Child("Accounts[len=11]").ParentFunc(func(accountsBranch ag_treeout.Branches) {
-						accountsBranch.Child(ag_format.Meta("          quest", inst.AccountMetaSlice.Get(0)))
-						accountsBranch.Child(ag_format.Meta("    initializer", inst.AccountMetaSlice.Get(1)))
-						accountsBranch.Child(ag_format.Meta("   depositToken", inst.AccountMetaSlice.Get(2)))
-						accountsBranch.Child(ag_format.Meta(" pixelballzMint", inst.AccountMetaSlice.Get(3)))
-						accountsBranch.Child(ag_format.Meta("pixelballzToken", inst.AccountMetaSlice.Get(4)))
-						accountsBranch.Child(ag_format.Meta("       questAcc", inst.AccountMetaSlice.Get(5)))
-						accountsBranch.Child(ag_format.Meta("        questor", inst.AccountMetaSlice.Get(6)))
-						accountsBranch.Child(ag_format.Meta("        questee", inst.AccountMetaSlice.Get(7)))
-						accountsBranch.Child(ag_format.Meta("  systemProgram", inst.AccountMetaSlice.Get(8)))
-						accountsBranch.Child(ag_format.Meta("   tokenProgram", inst.AccountMetaSlice.Get(9)))
-						accountsBranch.Child(ag_format.Meta("           rent", inst.AccountMetaSlice.Get(10)))
+					instructionBranch.Child("Accounts[len=8]").ParentFunc(func(accountsBranch ag_treeout.Branches) {
+						accountsBranch.Child(ag_format.Meta("        quest", inst.AccountMetaSlice.Get(0)))
+						accountsBranch.Child(ag_format.Meta("  initializer", inst.AccountMetaSlice.Get(1)))
+						accountsBranch.Child(ag_format.Meta("questProposal", inst.AccountMetaSlice.Get(2)))
+						accountsBranch.Child(ag_format.Meta("     questAcc", inst.AccountMetaSlice.Get(3)))
+						accountsBranch.Child(ag_format.Meta("questRecorder", inst.AccountMetaSlice.Get(4)))
+						accountsBranch.Child(ag_format.Meta("systemProgram", inst.AccountMetaSlice.Get(5)))
+						accountsBranch.Child(ag_format.Meta(" tokenProgram", inst.AccountMetaSlice.Get(6)))
+						accountsBranch.Child(ag_format.Meta("         rent", inst.AccountMetaSlice.Get(7)))
 					})
 				})
 		})
 }
 
 func (obj StartQuest) MarshalWithEncoder(encoder *ag_binary.Encoder) (err error) {
+	// Serialize `QuestProposalIndex` param:
+	err = encoder.Encode(obj.QuestProposalIndex)
+	if err != nil {
+		return err
+	}
+	// Serialize `QuestProposalBump` param:
+	err = encoder.Encode(obj.QuestProposalBump)
+	if err != nil {
+		return err
+	}
+	// Serialize `QuestRecorderBump` param:
+	err = encoder.Encode(obj.QuestRecorderBump)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 func (obj *StartQuest) UnmarshalWithDecoder(decoder *ag_binary.Decoder) (err error) {
+	// Deserialize `QuestProposalIndex`:
+	err = decoder.Decode(&obj.QuestProposalIndex)
+	if err != nil {
+		return err
+	}
+	// Deserialize `QuestProposalBump`:
+	err = decoder.Decode(&obj.QuestProposalBump)
+	if err != nil {
+		return err
+	}
+	// Deserialize `QuestRecorderBump`:
+	err = decoder.Decode(&obj.QuestRecorderBump)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
 // NewStartQuestInstruction declares a new StartQuest instruction with the provided parameters and accounts.
 func NewStartQuestInstruction(
+	// Parameters:
+	questProposalIndex uint64,
+	questProposalBump uint8,
+	questRecorderBump uint8,
 	// Accounts:
 	quest ag_solanago.PublicKey,
 	initializer ag_solanago.PublicKey,
-	depositTokenAccount ag_solanago.PublicKey,
-	pixelballzMint ag_solanago.PublicKey,
-	pixelballzTokenAccount ag_solanago.PublicKey,
+	questProposal ag_solanago.PublicKey,
 	questAcc ag_solanago.PublicKey,
-	questor ag_solanago.PublicKey,
-	questee ag_solanago.PublicKey,
+	questRecorder ag_solanago.PublicKey,
 	systemProgram ag_solanago.PublicKey,
 	tokenProgram ag_solanago.PublicKey,
 	rent ag_solanago.PublicKey) *StartQuest {
 	return NewStartQuestInstructionBuilder().
+		SetQuestProposalIndex(questProposalIndex).
+		SetQuestProposalBump(questProposalBump).
+		SetQuestRecorderBump(questRecorderBump).
 		SetQuestAccount(quest).
 		SetInitializerAccount(initializer).
-		SetDepositTokenAccountAccount(depositTokenAccount).
-		SetPixelballzMintAccount(pixelballzMint).
-		SetPixelballzTokenAccountAccount(pixelballzTokenAccount).
+		SetQuestProposalAccount(questProposal).
 		SetQuestAccAccount(questAcc).
-		SetQuestorAccount(questor).
-		SetQuesteeAccount(questee).
+		SetQuestRecorderAccount(questRecorder).
 		SetSystemProgramAccount(systemProgram).
 		SetTokenProgramAccount(tokenProgram).
 		SetRentAccount(rent)

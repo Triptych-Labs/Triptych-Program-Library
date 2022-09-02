@@ -28,19 +28,27 @@ func init() {
 }
 
 var (
-	Instruction_EnrollQuestor = ag_binary.TypeID([8]byte{24, 214, 177, 154, 205, 7, 26, 46})
-
-	Instruction_EnrollQuestee = ag_binary.TypeID([8]byte{142, 147, 49, 24, 11, 200, 232, 83})
-
-	Instruction_UpdateQuestee = ag_binary.TypeID([8]byte{56, 254, 41, 193, 39, 42, 198, 0})
-
 	Instruction_EnableQuests = ag_binary.TypeID([8]byte{196, 145, 208, 170, 4, 80, 81, 162})
 
-	Instruction_CreateQuest = ag_binary.TypeID([8]byte{112, 49, 32, 224, 255, 173, 5, 7})
+	Instruction_RegisterQuestsStakingReward = ag_binary.TypeID([8]byte{250, 178, 63, 39, 253, 83, 221, 154})
+
+	Instruction_RegisterQuestsReward = ag_binary.TypeID([8]byte{234, 219, 17, 225, 3, 151, 14, 230})
 
 	Instruction_RegisterQuestReward = ag_binary.TypeID([8]byte{36, 83, 38, 130, 109, 90, 36, 132})
 
+	Instruction_CreateQuest = ag_binary.TypeID([8]byte{112, 49, 32, 224, 255, 173, 5, 7})
+
+	Instruction_RegisterQuestRecorder = ag_binary.TypeID([8]byte{36, 37, 125, 174, 126, 63, 111, 139})
+
+	Instruction_ProposeQuestRecord = ag_binary.TypeID([8]byte{98, 126, 107, 108, 170, 184, 73, 209})
+
+	Instruction_EnterQuest = ag_binary.TypeID([8]byte{209, 65, 182, 159, 19, 250, 171, 230})
+
 	Instruction_StartQuest = ag_binary.TypeID([8]byte{212, 181, 79, 44, 200, 242, 13, 105})
+
+	Instruction_FlushQuestRecord = ag_binary.TypeID([8]byte{202, 189, 100, 174, 151, 186, 235, 155})
+
+	Instruction_ClaimQuestStakingReward = ag_binary.TypeID([8]byte{132, 156, 154, 3, 21, 180, 133, 198})
 
 	Instruction_EndQuest = ag_binary.TypeID([8]byte{250, 149, 247, 239, 238, 172, 90, 150})
 )
@@ -48,20 +56,28 @@ var (
 // InstructionIDToName returns the name of the instruction given its ID.
 func InstructionIDToName(id ag_binary.TypeID) string {
 	switch id {
-	case Instruction_EnrollQuestor:
-		return "EnrollQuestor"
-	case Instruction_EnrollQuestee:
-		return "EnrollQuestee"
-	case Instruction_UpdateQuestee:
-		return "UpdateQuestee"
 	case Instruction_EnableQuests:
 		return "EnableQuests"
-	case Instruction_CreateQuest:
-		return "CreateQuest"
+	case Instruction_RegisterQuestsStakingReward:
+		return "RegisterQuestsStakingReward"
+	case Instruction_RegisterQuestsReward:
+		return "RegisterQuestsReward"
 	case Instruction_RegisterQuestReward:
 		return "RegisterQuestReward"
+	case Instruction_CreateQuest:
+		return "CreateQuest"
+	case Instruction_RegisterQuestRecorder:
+		return "RegisterQuestRecorder"
+	case Instruction_ProposeQuestRecord:
+		return "ProposeQuestRecord"
+	case Instruction_EnterQuest:
+		return "EnterQuest"
 	case Instruction_StartQuest:
 		return "StartQuest"
+	case Instruction_FlushQuestRecord:
+		return "FlushQuestRecord"
+	case Instruction_ClaimQuestStakingReward:
+		return "ClaimQuestStakingReward"
 	case Instruction_EndQuest:
 		return "EndQuest"
 	default:
@@ -85,25 +101,37 @@ var InstructionImplDef = ag_binary.NewVariantDefinition(
 	ag_binary.AnchorTypeIDEncoding,
 	[]ag_binary.VariantType{
 		{
-			"enroll_questor", (*EnrollQuestor)(nil),
-		},
-		{
-			"enroll_questee", (*EnrollQuestee)(nil),
-		},
-		{
-			"update_questee", (*UpdateQuestee)(nil),
-		},
-		{
 			"enable_quests", (*EnableQuests)(nil),
 		},
 		{
-			"create_quest", (*CreateQuest)(nil),
+			"register_quests_staking_reward", (*RegisterQuestsStakingReward)(nil),
+		},
+		{
+			"register_quests_reward", (*RegisterQuestsReward)(nil),
 		},
 		{
 			"register_quest_reward", (*RegisterQuestReward)(nil),
 		},
 		{
+			"create_quest", (*CreateQuest)(nil),
+		},
+		{
+			"register_quest_recorder", (*RegisterQuestRecorder)(nil),
+		},
+		{
+			"propose_quest_record", (*ProposeQuestRecord)(nil),
+		},
+		{
+			"enter_quest", (*EnterQuest)(nil),
+		},
+		{
 			"start_quest", (*StartQuest)(nil),
+		},
+		{
+			"flush_quest_record", (*FlushQuestRecord)(nil),
+		},
+		{
+			"claim_quest_staking_reward", (*ClaimQuestStakingReward)(nil),
 		},
 		{
 			"end_quest", (*EndQuest)(nil),

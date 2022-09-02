@@ -1,0 +1,75 @@
+use anchor_lang::prelude::*;
+use anchor_spl::associated_token::{self, Create};
+use anchor_spl::token::{self, Burn, MintTo, Transfer};
+use constants::*;
+use errors::SwapError;
+use helper_fns::*;
+use ix_accounts::*;
+use std::result::Result;
+use structs::*;
+
+declare_id!("CMv8fVsm3oxKrvhegsQq952XfzpqrSg7qdsrsFQfSDv");
+
+mod constants;
+mod errors;
+pub mod helper_fns;
+mod ix_accounts;
+pub mod state;
+pub mod structs;
+
+#[program]
+pub mod swapper {
+    use super::*;
+
+    pub fn register_swap_recorder(ctx: Context<RegisterSwapRecorder>) -> Result<(), Error> {
+        let swap_recorder = &mut ctx.accounts.swap_recorder;
+        swap_recorder.proposals = 0;
+
+        Ok(())
+    }
+
+    pub fn propose_swap_record(
+        ctx: Context<ProposeSwap>,
+        per: u64,
+        exchange: u64,
+        splits: Vec<Split>,
+    ) -> Result<(), Error> {
+        let swap = &mut ctx.accounts.swap;
+        let swaps = &mut ctx.accounts.swap_recorder;
+
+        let oracle = &ctx.accounts.oracle;
+        let mint = &ctx.accounts.mint;
+        let pool = &ctx.accounts.swap_pool;
+
+        swap.index = swaps.proposals;
+        swap.per = per;
+        swap.exchange = exchange;
+        swap.mint_decimals = mint.decimals;
+        swap.oracle = oracle.key();
+        swap.mint = mint.key();
+        swap.token_account = pool.key();
+        swap.splits = splits;
+
+        swaps.proposals += 1;
+
+        Ok(())
+    }
+
+    pub fn update_swap_record(
+        ctx: Context<UpdateSwap>,
+        per: u64,
+        exchange: u64,
+        splits: Vec<Split>,
+    ) -> Result<(), Error> {
+        let swap = &mut ctx.accounts.swap;
+        swap.per = per;
+        swap.exchange = exchange;
+        swap.splits = splits;
+
+        Ok(())
+    }
+
+    pub fn enter_swap(ctx: Context<InvokeSwap>) -> Result<(), Error> {
+        Ok(())
+    }
+}

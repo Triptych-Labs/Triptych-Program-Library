@@ -21,6 +21,9 @@ type CreateQuest struct {
 	Xp              *uint64
 	RequiredLevel   *uint64 `bin:"optional"`
 	Enabled         *bool
+	StakingConfig   *StakingConfig `bin:"optional"`
+	PairsConfig     *PairsConfig   `bin:"optional"`
+	Rewards         *[]Reward
 
 	// [0] = [WRITE, SIGNER] oracle
 	//
@@ -91,6 +94,24 @@ func (inst *CreateQuest) SetRequiredLevel(requiredLevel uint64) *CreateQuest {
 // SetEnabled sets the "enabled" parameter.
 func (inst *CreateQuest) SetEnabled(enabled bool) *CreateQuest {
 	inst.Enabled = &enabled
+	return inst
+}
+
+// SetStakingConfig sets the "stakingConfig" parameter.
+func (inst *CreateQuest) SetStakingConfig(stakingConfig StakingConfig) *CreateQuest {
+	inst.StakingConfig = &stakingConfig
+	return inst
+}
+
+// SetPairsConfig sets the "pairsConfig" parameter.
+func (inst *CreateQuest) SetPairsConfig(pairsConfig PairsConfig) *CreateQuest {
+	inst.PairsConfig = &pairsConfig
+	return inst
+}
+
+// SetRewards sets the "rewards" parameter.
+func (inst *CreateQuest) SetRewards(rewards []Reward) *CreateQuest {
+	inst.Rewards = &rewards
 	return inst
 }
 
@@ -176,6 +197,9 @@ func (inst *CreateQuest) Validate() error {
 		if inst.Enabled == nil {
 			return errors.New("Enabled parameter is not set")
 		}
+		if inst.Rewards == nil {
+			return errors.New("Rewards parameter is not set")
+		}
 	}
 
 	// Check whether all (required) accounts are set:
@@ -205,7 +229,7 @@ func (inst *CreateQuest) EncodeToTree(parent ag_treeout.Branches) {
 				ParentFunc(func(instructionBranch ag_treeout.Branches) {
 
 					// Parameters of the instruction:
-					instructionBranch.Child("Params[len=9]").ParentFunc(func(paramsBranch ag_treeout.Branches) {
+					instructionBranch.Child("Params[len=12]").ParentFunc(func(paramsBranch ag_treeout.Branches) {
 						paramsBranch.Child(ag_format.Param("     QuestIndex", *inst.QuestIndex))
 						paramsBranch.Child(ag_format.Param("           Name", *inst.Name))
 						paramsBranch.Child(ag_format.Param("       Duration", *inst.Duration))
@@ -215,6 +239,9 @@ func (inst *CreateQuest) EncodeToTree(parent ag_treeout.Branches) {
 						paramsBranch.Child(ag_format.Param("             Xp", *inst.Xp))
 						paramsBranch.Child(ag_format.Param("  RequiredLevel (OPT)", inst.RequiredLevel))
 						paramsBranch.Child(ag_format.Param("        Enabled", *inst.Enabled))
+						paramsBranch.Child(ag_format.Param("  StakingConfig (OPT)", inst.StakingConfig))
+						paramsBranch.Child(ag_format.Param("    PairsConfig (OPT)", inst.PairsConfig))
+						paramsBranch.Child(ag_format.Param("        Rewards", *inst.Rewards))
 					})
 
 					// Accounts of the instruction:
@@ -313,6 +340,47 @@ func (obj CreateQuest) MarshalWithEncoder(encoder *ag_binary.Encoder) (err error
 	if err != nil {
 		return err
 	}
+	// Serialize `StakingConfig` param (optional):
+	{
+		if obj.StakingConfig == nil {
+			err = encoder.WriteBool(false)
+			if err != nil {
+				return err
+			}
+		} else {
+			err = encoder.WriteBool(true)
+			if err != nil {
+				return err
+			}
+			err = encoder.Encode(obj.StakingConfig)
+			if err != nil {
+				return err
+			}
+		}
+	}
+	// Serialize `PairsConfig` param (optional):
+	{
+		if obj.PairsConfig == nil {
+			err = encoder.WriteBool(false)
+			if err != nil {
+				return err
+			}
+		} else {
+			err = encoder.WriteBool(true)
+			if err != nil {
+				return err
+			}
+			err = encoder.Encode(obj.PairsConfig)
+			if err != nil {
+				return err
+			}
+		}
+	}
+	// Serialize `Rewards` param:
+	err = encoder.Encode(obj.Rewards)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 func (obj *CreateQuest) UnmarshalWithDecoder(decoder *ag_binary.Decoder) (err error) {
@@ -385,6 +453,37 @@ func (obj *CreateQuest) UnmarshalWithDecoder(decoder *ag_binary.Decoder) (err er
 	if err != nil {
 		return err
 	}
+	// Deserialize `StakingConfig` (optional):
+	{
+		ok, err := decoder.ReadBool()
+		if err != nil {
+			return err
+		}
+		if ok {
+			err = decoder.Decode(&obj.StakingConfig)
+			if err != nil {
+				return err
+			}
+		}
+	}
+	// Deserialize `PairsConfig` (optional):
+	{
+		ok, err := decoder.ReadBool()
+		if err != nil {
+			return err
+		}
+		if ok {
+			err = decoder.Decode(&obj.PairsConfig)
+			if err != nil {
+				return err
+			}
+		}
+	}
+	// Deserialize `Rewards`:
+	err = decoder.Decode(&obj.Rewards)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -400,6 +499,9 @@ func NewCreateQuestInstruction(
 	xp uint64,
 	requiredLevel uint64,
 	enabled bool,
+	stakingConfig StakingConfig,
+	pairsConfig PairsConfig,
+	rewards []Reward,
 	// Accounts:
 	oracle ag_solanago.PublicKey,
 	quest ag_solanago.PublicKey,
@@ -415,6 +517,9 @@ func NewCreateQuestInstruction(
 		SetXp(xp).
 		SetRequiredLevel(requiredLevel).
 		SetEnabled(enabled).
+		SetStakingConfig(stakingConfig).
+		SetPairsConfig(pairsConfig).
+		SetRewards(rewards).
 		SetOracleAccount(oracle).
 		SetQuestAccount(quest).
 		SetQuestsAccount(quests).

@@ -1,0 +1,78 @@
+package questing
+
+import (
+	"encoding/json"
+	"fmt"
+	"syscall/js"
+
+	"github.com/gagliardetto/solana-go"
+	"github.com/gagliardetto/solana-go/rpc"
+	"triptych.labs/questing/quests/ops"
+	"triptych.labs/utils"
+)
+
+func NewQuestProposal(this js.Value, args []js.Value) interface{} {
+	holder := solana.MustPublicKeyFromBase58(args[0].String())
+	quest := solana.MustPublicKeyFromBase58(args[1].String())
+	depositingLeftInp, depositingRightInp := args[2].String(), args[3].String()
+
+	handler := js.FuncOf(func(this js.Value, args []js.Value) interface{} {
+		resolve := args[0]
+		reject := args[1]
+
+		go func() {
+			var depositingLeft, depositingRight []solana.PublicKey
+			json.Unmarshal([]byte(depositingLeftInp), &depositingLeft)
+			json.Unmarshal([]byte(depositingRightInp), &depositingRight)
+
+			if len(depositingLeft) == 0 && len(depositingRight) == 0 {
+				errorConstructor := js.Global().Get("Error")
+				errorObject := errorConstructor.New("invalid deposits")
+				reject.Invoke(errorObject)
+				return
+			}
+
+			enrollmentJson, err := newQuestProposal(holder, quest, depositingLeft, depositingRight)
+			if err != nil {
+				errorConstructor := js.Global().Get("Error")
+				errorObject := errorConstructor.New("unauthorized")
+				reject.Invoke(errorObject)
+				return
+			}
+
+			dst := js.Global().Get("Uint8Array").New(len(enrollmentJson))
+			js.CopyBytesToJS(dst, enrollmentJson)
+
+			resolve.Invoke(dst)
+		}()
+
+		return nil
+	})
+
+	promiseConstructor := js.Global().Get("Promise")
+	return promiseConstructor.New(handler)
+}
+
+func newQuestProposal(holder, quest solana.PublicKey, depositingLeft, depositingRight []solana.PublicKey) ([]byte, error) {
+	rpcClient := rpc.New(utils.NETWORK)
+
+	instructions := make([]solana.Instruction, 0)
+	txJson := []byte("{}")
+
+	questProposalIx := ops.NewQuestProposal(rpcClient, holder, quest, depositingLeft, depositingRight)
+	fmt.Println("xxxx", questProposalIx)
+	if questProposalIx != nil {
+		instructions = append(instructions, questProposalIx)
+
+		txBuilder := solana.NewTransactionBuilder()
+		for _, ix := range instructions {
+			txBuilder = txBuilder.AddInstruction(ix)
+		}
+		txB, _ := txBuilder.Build()
+		txJson, _ = json.MarshalIndent(txB, "", "  ")
+	}
+
+	fmt.Println("....", string(txJson))
+	return txJson, nil
+
+}

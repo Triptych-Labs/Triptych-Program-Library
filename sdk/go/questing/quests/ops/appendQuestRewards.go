@@ -4,25 +4,24 @@ import (
 	"fmt"
 
 	"github.com/gagliardetto/solana-go"
+	"github.com/gagliardetto/solana-go/rpc"
 	"triptych.labs/questing"
 	"triptych.labs/questing/quests"
 )
 
-func AppendQuestRewards(oracle solana.PublicKey, questData questing.Quest) []solana.Instruction {
+func AppendQuestRewards(rpcClient *rpc.Client, oracle solana.PublicKey, questData questing.Quest) []solana.Instruction {
 	questsPda, _ := quests.GetQuests(oracle)
-	questsData := quests.GetQuestsData(questsPda)
+	questsData := quests.GetQuestsData(rpcClient, questsPda)
 	fmt.Println(questsData.Quests)
-	quest, questBump := quests.GetQuest(oracle, questData.Index)
+	quest, _ := quests.GetQuest(oracle, questData.Index)
 
 	appendRewardIxs := make([]solana.Instruction, 0)
 
-	rewards := questData.Rewards
+	rewards := questsData.Rewards
 	for _, reward := range rewards {
 		appendRewardIx := questing.NewRegisterQuestRewardInstructionBuilder().
 			SetOracleAccount(oracle).
 			SetQuestAccount(quest).
-			SetQuestBump(questBump).
-			SetQuestIndex(questData.Index).
 			SetRentAccount(solana.SysVarRentPubkey).
 			SetReward(reward).
 			SetRewardMintAccount(reward.MintAddress).
@@ -40,3 +39,4 @@ func AppendQuestRewards(oracle solana.PublicKey, questData questing.Quest) []sol
 
 	return appendRewardIxs
 }
+

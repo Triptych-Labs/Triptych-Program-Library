@@ -12,35 +12,72 @@ import (
 
 // RegisterQuestReward is the `registerQuestReward` instruction.
 type RegisterQuestReward struct {
-	Reward *Reward
+	QuestBump  *uint8
+	QuestIndex *uint64
+	Reward     *Reward
+	Name       *string
+	Symbol     *string
+	Uri        *string
 
 	// [0] = [WRITE, SIGNER] oracle
 	//
-	// [1] = [] quests
+	// [1] = [WRITE] quest
 	//
 	// [2] = [WRITE, SIGNER] rewardMint
 	//
-	// [3] = [WRITE] rewardToken
+	// [3] = [] systemProgram
 	//
-	// [4] = [] systemProgram
+	// [4] = [] tokenProgram
 	//
-	// [5] = [] tokenProgram
+	// [5] = [] rent
 	//
-	// [6] = [] rent
+	// [6] = [] mplMetadataProgram
+	//
+	// [7] = [WRITE] metadataAccount
 	ag_solanago.AccountMetaSlice `bin:"-"`
 }
 
 // NewRegisterQuestRewardInstructionBuilder creates a new `RegisterQuestReward` instruction builder.
 func NewRegisterQuestRewardInstructionBuilder() *RegisterQuestReward {
 	nd := &RegisterQuestReward{
-		AccountMetaSlice: make(ag_solanago.AccountMetaSlice, 7),
+		AccountMetaSlice: make(ag_solanago.AccountMetaSlice, 8),
 	}
 	return nd
+}
+
+// SetQuestBump sets the "questBump" parameter.
+func (inst *RegisterQuestReward) SetQuestBump(questBump uint8) *RegisterQuestReward {
+	inst.QuestBump = &questBump
+	return inst
+}
+
+// SetQuestIndex sets the "questIndex" parameter.
+func (inst *RegisterQuestReward) SetQuestIndex(questIndex uint64) *RegisterQuestReward {
+	inst.QuestIndex = &questIndex
+	return inst
 }
 
 // SetReward sets the "reward" parameter.
 func (inst *RegisterQuestReward) SetReward(reward Reward) *RegisterQuestReward {
 	inst.Reward = &reward
+	return inst
+}
+
+// SetName sets the "name" parameter.
+func (inst *RegisterQuestReward) SetName(name string) *RegisterQuestReward {
+	inst.Name = &name
+	return inst
+}
+
+// SetSymbol sets the "symbol" parameter.
+func (inst *RegisterQuestReward) SetSymbol(symbol string) *RegisterQuestReward {
+	inst.Symbol = &symbol
+	return inst
+}
+
+// SetUri sets the "uri" parameter.
+func (inst *RegisterQuestReward) SetUri(uri string) *RegisterQuestReward {
+	inst.Uri = &uri
 	return inst
 }
 
@@ -55,14 +92,14 @@ func (inst *RegisterQuestReward) GetOracleAccount() *ag_solanago.AccountMeta {
 	return inst.AccountMetaSlice.Get(0)
 }
 
-// SetQuestsAccount sets the "quests" account.
-func (inst *RegisterQuestReward) SetQuestsAccount(quests ag_solanago.PublicKey) *RegisterQuestReward {
-	inst.AccountMetaSlice[1] = ag_solanago.Meta(quests)
+// SetQuestAccount sets the "quest" account.
+func (inst *RegisterQuestReward) SetQuestAccount(quest ag_solanago.PublicKey) *RegisterQuestReward {
+	inst.AccountMetaSlice[1] = ag_solanago.Meta(quest).WRITE()
 	return inst
 }
 
-// GetQuestsAccount gets the "quests" account.
-func (inst *RegisterQuestReward) GetQuestsAccount() *ag_solanago.AccountMeta {
+// GetQuestAccount gets the "quest" account.
+func (inst *RegisterQuestReward) GetQuestAccount() *ag_solanago.AccountMeta {
 	return inst.AccountMetaSlice.Get(1)
 }
 
@@ -77,48 +114,59 @@ func (inst *RegisterQuestReward) GetRewardMintAccount() *ag_solanago.AccountMeta
 	return inst.AccountMetaSlice.Get(2)
 }
 
-// SetRewardTokenAccount sets the "rewardToken" account.
-func (inst *RegisterQuestReward) SetRewardTokenAccount(rewardToken ag_solanago.PublicKey) *RegisterQuestReward {
-	inst.AccountMetaSlice[3] = ag_solanago.Meta(rewardToken).WRITE()
-	return inst
-}
-
-// GetRewardTokenAccount gets the "rewardToken" account.
-func (inst *RegisterQuestReward) GetRewardTokenAccount() *ag_solanago.AccountMeta {
-	return inst.AccountMetaSlice.Get(3)
-}
-
 // SetSystemProgramAccount sets the "systemProgram" account.
 func (inst *RegisterQuestReward) SetSystemProgramAccount(systemProgram ag_solanago.PublicKey) *RegisterQuestReward {
-	inst.AccountMetaSlice[4] = ag_solanago.Meta(systemProgram)
+	inst.AccountMetaSlice[3] = ag_solanago.Meta(systemProgram)
 	return inst
 }
 
 // GetSystemProgramAccount gets the "systemProgram" account.
 func (inst *RegisterQuestReward) GetSystemProgramAccount() *ag_solanago.AccountMeta {
-	return inst.AccountMetaSlice.Get(4)
+	return inst.AccountMetaSlice.Get(3)
 }
 
 // SetTokenProgramAccount sets the "tokenProgram" account.
 func (inst *RegisterQuestReward) SetTokenProgramAccount(tokenProgram ag_solanago.PublicKey) *RegisterQuestReward {
-	inst.AccountMetaSlice[5] = ag_solanago.Meta(tokenProgram)
+	inst.AccountMetaSlice[4] = ag_solanago.Meta(tokenProgram)
 	return inst
 }
 
 // GetTokenProgramAccount gets the "tokenProgram" account.
 func (inst *RegisterQuestReward) GetTokenProgramAccount() *ag_solanago.AccountMeta {
-	return inst.AccountMetaSlice.Get(5)
+	return inst.AccountMetaSlice.Get(4)
 }
 
 // SetRentAccount sets the "rent" account.
 func (inst *RegisterQuestReward) SetRentAccount(rent ag_solanago.PublicKey) *RegisterQuestReward {
-	inst.AccountMetaSlice[6] = ag_solanago.Meta(rent)
+	inst.AccountMetaSlice[5] = ag_solanago.Meta(rent)
 	return inst
 }
 
 // GetRentAccount gets the "rent" account.
 func (inst *RegisterQuestReward) GetRentAccount() *ag_solanago.AccountMeta {
+	return inst.AccountMetaSlice.Get(5)
+}
+
+// SetMplMetadataProgramAccount sets the "mplMetadataProgram" account.
+func (inst *RegisterQuestReward) SetMplMetadataProgramAccount(mplMetadataProgram ag_solanago.PublicKey) *RegisterQuestReward {
+	inst.AccountMetaSlice[6] = ag_solanago.Meta(mplMetadataProgram)
+	return inst
+}
+
+// GetMplMetadataProgramAccount gets the "mplMetadataProgram" account.
+func (inst *RegisterQuestReward) GetMplMetadataProgramAccount() *ag_solanago.AccountMeta {
 	return inst.AccountMetaSlice.Get(6)
+}
+
+// SetMetadataAccountAccount sets the "metadataAccount" account.
+func (inst *RegisterQuestReward) SetMetadataAccountAccount(metadataAccount ag_solanago.PublicKey) *RegisterQuestReward {
+	inst.AccountMetaSlice[7] = ag_solanago.Meta(metadataAccount).WRITE()
+	return inst
+}
+
+// GetMetadataAccountAccount gets the "metadataAccount" account.
+func (inst *RegisterQuestReward) GetMetadataAccountAccount() *ag_solanago.AccountMeta {
+	return inst.AccountMetaSlice.Get(7)
 }
 
 func (inst RegisterQuestReward) Build() *Instruction {
@@ -141,8 +189,23 @@ func (inst RegisterQuestReward) ValidateAndBuild() (*Instruction, error) {
 func (inst *RegisterQuestReward) Validate() error {
 	// Check whether all (required) parameters are set:
 	{
+		if inst.QuestBump == nil {
+			return errors.New("QuestBump parameter is not set")
+		}
+		if inst.QuestIndex == nil {
+			return errors.New("QuestIndex parameter is not set")
+		}
 		if inst.Reward == nil {
 			return errors.New("Reward parameter is not set")
+		}
+		if inst.Name == nil {
+			return errors.New("Name parameter is not set")
+		}
+		if inst.Symbol == nil {
+			return errors.New("Symbol parameter is not set")
+		}
+		if inst.Uri == nil {
+			return errors.New("Uri parameter is not set")
 		}
 	}
 
@@ -152,22 +215,25 @@ func (inst *RegisterQuestReward) Validate() error {
 			return errors.New("accounts.Oracle is not set")
 		}
 		if inst.AccountMetaSlice[1] == nil {
-			return errors.New("accounts.Quests is not set")
+			return errors.New("accounts.Quest is not set")
 		}
 		if inst.AccountMetaSlice[2] == nil {
 			return errors.New("accounts.RewardMint is not set")
 		}
 		if inst.AccountMetaSlice[3] == nil {
-			return errors.New("accounts.RewardToken is not set")
-		}
-		if inst.AccountMetaSlice[4] == nil {
 			return errors.New("accounts.SystemProgram is not set")
 		}
-		if inst.AccountMetaSlice[5] == nil {
+		if inst.AccountMetaSlice[4] == nil {
 			return errors.New("accounts.TokenProgram is not set")
 		}
-		if inst.AccountMetaSlice[6] == nil {
+		if inst.AccountMetaSlice[5] == nil {
 			return errors.New("accounts.Rent is not set")
+		}
+		if inst.AccountMetaSlice[6] == nil {
+			return errors.New("accounts.MplMetadataProgram is not set")
+		}
+		if inst.AccountMetaSlice[7] == nil {
+			return errors.New("accounts.MetadataAccount is not set")
 		}
 	}
 	return nil
@@ -182,35 +248,91 @@ func (inst *RegisterQuestReward) EncodeToTree(parent ag_treeout.Branches) {
 				ParentFunc(func(instructionBranch ag_treeout.Branches) {
 
 					// Parameters of the instruction:
-					instructionBranch.Child("Params[len=1]").ParentFunc(func(paramsBranch ag_treeout.Branches) {
-						paramsBranch.Child(ag_format.Param("Reward", *inst.Reward))
+					instructionBranch.Child("Params[len=6]").ParentFunc(func(paramsBranch ag_treeout.Branches) {
+						paramsBranch.Child(ag_format.Param(" QuestBump", *inst.QuestBump))
+						paramsBranch.Child(ag_format.Param("QuestIndex", *inst.QuestIndex))
+						paramsBranch.Child(ag_format.Param("    Reward", *inst.Reward))
+						paramsBranch.Child(ag_format.Param("      Name", *inst.Name))
+						paramsBranch.Child(ag_format.Param("    Symbol", *inst.Symbol))
+						paramsBranch.Child(ag_format.Param("       Uri", *inst.Uri))
 					})
 
 					// Accounts of the instruction:
-					instructionBranch.Child("Accounts[len=7]").ParentFunc(func(accountsBranch ag_treeout.Branches) {
-						accountsBranch.Child(ag_format.Meta("       oracle", inst.AccountMetaSlice.Get(0)))
-						accountsBranch.Child(ag_format.Meta("       quests", inst.AccountMetaSlice.Get(1)))
-						accountsBranch.Child(ag_format.Meta("   rewardMint", inst.AccountMetaSlice.Get(2)))
-						accountsBranch.Child(ag_format.Meta("  rewardToken", inst.AccountMetaSlice.Get(3)))
-						accountsBranch.Child(ag_format.Meta("systemProgram", inst.AccountMetaSlice.Get(4)))
-						accountsBranch.Child(ag_format.Meta(" tokenProgram", inst.AccountMetaSlice.Get(5)))
-						accountsBranch.Child(ag_format.Meta("         rent", inst.AccountMetaSlice.Get(6)))
+					instructionBranch.Child("Accounts[len=8]").ParentFunc(func(accountsBranch ag_treeout.Branches) {
+						accountsBranch.Child(ag_format.Meta("            oracle", inst.AccountMetaSlice.Get(0)))
+						accountsBranch.Child(ag_format.Meta("             quest", inst.AccountMetaSlice.Get(1)))
+						accountsBranch.Child(ag_format.Meta("        rewardMint", inst.AccountMetaSlice.Get(2)))
+						accountsBranch.Child(ag_format.Meta("     systemProgram", inst.AccountMetaSlice.Get(3)))
+						accountsBranch.Child(ag_format.Meta("      tokenProgram", inst.AccountMetaSlice.Get(4)))
+						accountsBranch.Child(ag_format.Meta("              rent", inst.AccountMetaSlice.Get(5)))
+						accountsBranch.Child(ag_format.Meta("mplMetadataProgram", inst.AccountMetaSlice.Get(6)))
+						accountsBranch.Child(ag_format.Meta("          metadata", inst.AccountMetaSlice.Get(7)))
 					})
 				})
 		})
 }
 
 func (obj RegisterQuestReward) MarshalWithEncoder(encoder *ag_binary.Encoder) (err error) {
+	// Serialize `QuestBump` param:
+	err = encoder.Encode(obj.QuestBump)
+	if err != nil {
+		return err
+	}
+	// Serialize `QuestIndex` param:
+	err = encoder.Encode(obj.QuestIndex)
+	if err != nil {
+		return err
+	}
 	// Serialize `Reward` param:
 	err = encoder.Encode(obj.Reward)
+	if err != nil {
+		return err
+	}
+	// Serialize `Name` param:
+	err = encoder.Encode(obj.Name)
+	if err != nil {
+		return err
+	}
+	// Serialize `Symbol` param:
+	err = encoder.Encode(obj.Symbol)
+	if err != nil {
+		return err
+	}
+	// Serialize `Uri` param:
+	err = encoder.Encode(obj.Uri)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 func (obj *RegisterQuestReward) UnmarshalWithDecoder(decoder *ag_binary.Decoder) (err error) {
+	// Deserialize `QuestBump`:
+	err = decoder.Decode(&obj.QuestBump)
+	if err != nil {
+		return err
+	}
+	// Deserialize `QuestIndex`:
+	err = decoder.Decode(&obj.QuestIndex)
+	if err != nil {
+		return err
+	}
 	// Deserialize `Reward`:
 	err = decoder.Decode(&obj.Reward)
+	if err != nil {
+		return err
+	}
+	// Deserialize `Name`:
+	err = decoder.Decode(&obj.Name)
+	if err != nil {
+		return err
+	}
+	// Deserialize `Symbol`:
+	err = decoder.Decode(&obj.Symbol)
+	if err != nil {
+		return err
+	}
+	// Deserialize `Uri`:
+	err = decoder.Decode(&obj.Uri)
 	if err != nil {
 		return err
 	}
@@ -220,22 +342,34 @@ func (obj *RegisterQuestReward) UnmarshalWithDecoder(decoder *ag_binary.Decoder)
 // NewRegisterQuestRewardInstruction declares a new RegisterQuestReward instruction with the provided parameters and accounts.
 func NewRegisterQuestRewardInstruction(
 	// Parameters:
+	questBump uint8,
+	questIndex uint64,
 	reward Reward,
+	name string,
+	symbol string,
+	uri string,
 	// Accounts:
 	oracle ag_solanago.PublicKey,
-	quests ag_solanago.PublicKey,
+	quest ag_solanago.PublicKey,
 	rewardMint ag_solanago.PublicKey,
-	rewardToken ag_solanago.PublicKey,
 	systemProgram ag_solanago.PublicKey,
 	tokenProgram ag_solanago.PublicKey,
-	rent ag_solanago.PublicKey) *RegisterQuestReward {
+	rent ag_solanago.PublicKey,
+	mplMetadataProgram ag_solanago.PublicKey,
+	metadataAccount ag_solanago.PublicKey) *RegisterQuestReward {
 	return NewRegisterQuestRewardInstructionBuilder().
+		SetQuestBump(questBump).
+		SetQuestIndex(questIndex).
 		SetReward(reward).
+		SetName(name).
+		SetSymbol(symbol).
+		SetUri(uri).
 		SetOracleAccount(oracle).
-		SetQuestsAccount(quests).
+		SetQuestAccount(quest).
 		SetRewardMintAccount(rewardMint).
-		SetRewardTokenAccount(rewardToken).
 		SetSystemProgramAccount(systemProgram).
 		SetTokenProgramAccount(tokenProgram).
-		SetRentAccount(rent)
+		SetRentAccount(rent).
+		SetMplMetadataProgramAccount(mplMetadataProgram).
+		SetMetadataAccountAccount(metadataAccount)
 }

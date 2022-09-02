@@ -7,10 +7,112 @@ import (
 	ag_solanago "github.com/gagliardetto/solana-go"
 )
 
+type PairsConfig struct {
+	Left          uint8
+	LeftCreators  [5]ag_solanago.PublicKey
+	Right         uint8
+	RightCreators [5]ag_solanago.PublicKey
+}
+
+func (obj PairsConfig) MarshalWithEncoder(encoder *ag_binary.Encoder) (err error) {
+	// Serialize `Left` param:
+	err = encoder.Encode(obj.Left)
+	if err != nil {
+		return err
+	}
+	// Serialize `LeftCreators` param:
+	err = encoder.Encode(obj.LeftCreators)
+	if err != nil {
+		return err
+	}
+	// Serialize `Right` param:
+	err = encoder.Encode(obj.Right)
+	if err != nil {
+		return err
+	}
+	// Serialize `RightCreators` param:
+	err = encoder.Encode(obj.RightCreators)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (obj *PairsConfig) UnmarshalWithDecoder(decoder *ag_binary.Decoder) (err error) {
+	// Deserialize `Left`:
+	err = decoder.Decode(&obj.Left)
+	if err != nil {
+		return err
+	}
+	// Deserialize `LeftCreators`:
+	err = decoder.Decode(&obj.LeftCreators)
+	if err != nil {
+		return err
+	}
+	// Deserialize `Right`:
+	err = decoder.Decode(&obj.Right)
+	if err != nil {
+		return err
+	}
+	// Deserialize `RightCreators`:
+	err = decoder.Decode(&obj.RightCreators)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+type StakingConfig struct {
+	MintAddress  ag_solanago.PublicKey
+	YieldPer     uint64
+	YieldPerTime uint64
+}
+
+func (obj StakingConfig) MarshalWithEncoder(encoder *ag_binary.Encoder) (err error) {
+	// Serialize `MintAddress` param:
+	err = encoder.Encode(obj.MintAddress)
+	if err != nil {
+		return err
+	}
+	// Serialize `YieldPer` param:
+	err = encoder.Encode(obj.YieldPer)
+	if err != nil {
+		return err
+	}
+	// Serialize `YieldPerTime` param:
+	err = encoder.Encode(obj.YieldPerTime)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (obj *StakingConfig) UnmarshalWithDecoder(decoder *ag_binary.Decoder) (err error) {
+	// Deserialize `MintAddress`:
+	err = decoder.Decode(&obj.MintAddress)
+	if err != nil {
+		return err
+	}
+	// Deserialize `YieldPer`:
+	err = decoder.Decode(&obj.YieldPer)
+	if err != nil {
+		return err
+	}
+	// Deserialize `YieldPerTime`:
+	err = decoder.Decode(&obj.YieldPerTime)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 type Reward struct {
-	MintAddress ag_solanago.PublicKey
-	Threshold   uint8
-	Amount      uint64
+	MintAddress   ag_solanago.PublicKey
+	Threshold     uint8
+	Amount        uint64
+	AuthorityEnum uint8
+	Cap           uint64
+	Counter       uint64
 }
 
 func (obj Reward) MarshalWithEncoder(encoder *ag_binary.Encoder) (err error) {
@@ -26,6 +128,21 @@ func (obj Reward) MarshalWithEncoder(encoder *ag_binary.Encoder) (err error) {
 	}
 	// Serialize `Amount` param:
 	err = encoder.Encode(obj.Amount)
+	if err != nil {
+		return err
+	}
+	// Serialize `AuthorityEnum` param:
+	err = encoder.Encode(obj.AuthorityEnum)
+	if err != nil {
+		return err
+	}
+	// Serialize `Cap` param:
+	err = encoder.Encode(obj.Cap)
+	if err != nil {
+		return err
+	}
+	// Serialize `Counter` param:
+	err = encoder.Encode(obj.Counter)
 	if err != nil {
 		return err
 	}
@@ -45,6 +162,21 @@ func (obj *Reward) UnmarshalWithDecoder(decoder *ag_binary.Decoder) (err error) 
 	}
 	// Deserialize `Amount`:
 	err = decoder.Decode(&obj.Amount)
+	if err != nil {
+		return err
+	}
+	// Deserialize `AuthorityEnum`:
+	err = decoder.Decode(&obj.AuthorityEnum)
+	if err != nil {
+		return err
+	}
+	// Deserialize `Cap`:
+	err = decoder.Decode(&obj.Cap)
+	if err != nil {
+		return err
+	}
+	// Deserialize `Counter`:
+	err = decoder.Decode(&obj.Counter)
 	if err != nil {
 		return err
 	}
@@ -126,55 +258,4 @@ func (obj *Split) UnmarshalWithDecoder(decoder *ag_binary.Decoder) (err error) {
 		return err
 	}
 	return nil
-}
-
-type QuestError ag_binary.BorshEnum
-
-const (
-	QuestErrorUnexpectedQuestingState QuestError = iota
-	QuestErrorInvalidInitializer
-	QuestErrorIsTimelocked
-	QuestErrorNumericalOverflowError
-	QuestErrorIndexGreaterThanLength
-	QuestErrorCannotFindUsableConfigLine
-	QuestErrorUuidMustBeExactly6Length
-	QuestErrorInvalidString
-	QuestErrorSuspiciousTransaction
-	QuestErrorInvalidMint
-	QuestErrorNotEnoughXp
-	QuestErrorInvalidConviction
-	QuestErrorInvalidCompletion
-)
-
-func (value QuestError) String() string {
-	switch value {
-	case QuestErrorUnexpectedQuestingState:
-		return "UnexpectedQuestingState"
-	case QuestErrorInvalidInitializer:
-		return "InvalidInitializer"
-	case QuestErrorIsTimelocked:
-		return "IsTimelocked"
-	case QuestErrorNumericalOverflowError:
-		return "NumericalOverflowError"
-	case QuestErrorIndexGreaterThanLength:
-		return "IndexGreaterThanLength"
-	case QuestErrorCannotFindUsableConfigLine:
-		return "CannotFindUsableConfigLine"
-	case QuestErrorUuidMustBeExactly6Length:
-		return "UuidMustBeExactly6Length"
-	case QuestErrorInvalidString:
-		return "InvalidString"
-	case QuestErrorSuspiciousTransaction:
-		return "SuspiciousTransaction"
-	case QuestErrorInvalidMint:
-		return "InvalidMint"
-	case QuestErrorNotEnoughXp:
-		return "NotEnoughXp"
-	case QuestErrorInvalidConviction:
-		return "InvalidConviction"
-	case QuestErrorInvalidCompletion:
-		return "InvalidCompletion"
-	default:
-		return ""
-	}
 }

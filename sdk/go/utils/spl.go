@@ -1,13 +1,17 @@
 package utils
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"math"
 	"net/http"
 
+	ag_binary "github.com/gagliardetto/binary"
 	"github.com/gagliardetto/solana-go"
+	"github.com/gagliardetto/solana-go/programs/token"
+	"github.com/gagliardetto/solana-go/rpc"
 )
 
 type TokenListMeta struct {
@@ -62,3 +66,46 @@ func ConvertUiAmountToAmount(uiAmount float64, decimals uint8) uint64 {
 func ConvertAmountToUiAmount(amount uint64, decimals uint8) float64 {
 	return float64(amount) / math.Pow10(int(decimals))
 }
+
+func GetTokenMintData(rpcClient *rpc.Client, tokenMint solana.PublicKey) *token.Mint {
+	bin, _ := rpcClient.GetAccountInfoWithOpts(context.TODO(), tokenMint, &rpc.GetAccountInfoOpts{Commitment: "confirmed"})
+	if bin == nil {
+		return nil
+	}
+	var data token.Mint
+	decoder := ag_binary.NewBorshDecoder(bin.Value.Data.GetBinary())
+	err := data.UnmarshalWithDecoder(decoder)
+	if err != nil {
+		panic(err)
+	}
+
+	return &data
+
+}
+
+func GetTokenMintsData(rpcClient *rpc.Client, tokenMints []solana.PublicKey) map[solana.PublicKey]token.Mint {
+	mints := make(map[solana.PublicKey]token.Mint)
+
+	response, _ := rpcClient.GetMultipleAccounts(context.TODO(), tokenMints...)
+	if response == nil {
+		return nil
+	}
+	if len(response.Value) == 0 {
+		return nil
+	}
+
+	for i, bin := range response.Value {
+		var data token.Mint
+		decoder := ag_binary.NewBorshDecoder(bin.Data.GetBinary())
+		err := data.UnmarshalWithDecoder(decoder)
+		if err != nil {
+			panic(err)
+		}
+
+		mints[tokenMints[i]] = data
+	}
+
+	return mints
+
+}
+

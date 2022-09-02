@@ -1,0 +1,20 @@
+package ops
+
+import (
+	"github.com/gagliardetto/solana-go"
+	"github.com/gagliardetto/solana-go/rpc"
+	"triptych.labs/flipper"
+	"triptych.labs/flipper/flips"
+)
+
+func GetStatistics(rpcClient *rpc.Client, oracle solana.PublicKey) *flipper.Instruction {
+	flip, _ := flips.GetFlip(oracle)
+	house, _ := flips.GetHouse(oracle)
+	ix := flipper.NewCreateFlipInstructionBuilder().
+		SetFlipAccount(flip).
+		SetHouseAccount(house).
+		SetOracleAccount(oracle).
+		SetSystemProgramAccount(solana.SystemProgramID)
+
+	return ix.Build()
+}

@@ -56,13 +56,13 @@ func GetQuestEntitlementTokenAccount(
 }
 
 func GetQuestDepositTokenAccount(
-	questee solana.PublicKey,
+	pixelBallzMint solana.PublicKey,
 	quest solana.PublicKey,
 ) (solana.PublicKey, uint8) {
 	addr, bump, _ := solana.FindProgramAddress(
 		[][]byte{
 			[]byte("questing"),
-			questee.Bytes(),
+			pixelBallzMint.Bytes(),
 			quest.Bytes(),
 		},
 		questing.ProgramID,
@@ -72,14 +72,14 @@ func GetQuestDepositTokenAccount(
 
 func GetQuestAccount(
 	questor solana.PublicKey,
-	questee solana.PublicKey,
+	questProposal solana.PublicKey,
 	quest solana.PublicKey,
 ) (solana.PublicKey, uint8) {
 	addr, bump, _ := solana.FindProgramAddress(
 		[][]byte{
 			[]byte("questing"),
 			questor.Bytes(),
-			questee.Bytes(),
+			questProposal.Bytes(),
 			quest.Bytes(),
 		},
 		questing.ProgramID,
@@ -139,6 +139,39 @@ func GetRewardToken(
 			[]byte("oracle"),
 			oracle.Bytes(),
 			mint.Bytes(),
+		},
+		questing.ProgramID,
+	)
+	return addr, bump
+}
+
+func GetQuestRecorder(
+	quest solana.PublicKey,
+	initializer solana.PublicKey,
+) (solana.PublicKey, uint8) {
+	addr, bump, _ := solana.FindProgramAddress(
+		[][]byte{
+			[]byte("quest_recorder"),
+			quest.Bytes(),
+			initializer.Bytes(),
+		},
+		questing.ProgramID,
+	)
+	return addr, bump
+}
+
+func GetQuestProposal(
+	quest solana.PublicKey,
+	initializer solana.PublicKey,
+	proposalId uint64,
+) (solana.PublicKey, uint8) {
+	buf := make([]byte, 8)
+	binary.LittleEndian.PutUint64(buf, proposalId)
+	addr, bump, _ := solana.FindProgramAddress(
+		[][]byte{
+			quest.Bytes(),
+			initializer.Bytes(),
+			buf,
 		},
 		questing.ProgramID,
 	)

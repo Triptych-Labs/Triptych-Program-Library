@@ -5,6 +5,7 @@ import (
 	"crypto/sha256"
 	"encoding/json"
 	"fmt"
+	"log"
 	"time"
 
 	"github.com/btcsuite/btcutil/base58"
@@ -12,8 +13,8 @@ import (
 
 	"triptych.labs/questing"
 	"triptych.labs/questing/quests"
-	"triptych.labs/questing/quests/ops"
 	quest_ops "triptych.labs/questing/quests/ops"
+	"triptych.labs/questing_tests/v2/integrations"
 	"triptych.labs/utils"
 
 	"github.com/gagliardetto/solana-go"
@@ -26,49 +27,60 @@ const DEVNET = "https://sparkling-dark-shadow.solana-devnet.quiknode.pro/0e9964e
 const TESTNET = "https://api.testnet.solana.com"
 const NETWORK = DEVNET
 
-var MINT = solana.MustPublicKeyFromBase58("6c5EBgbPnpdZgKhXW4uTtcYojXqVNnVQbS2cdCHo8Zmu")
+const LEFT = 1
+const RIGHT = 2
+
+var STAKING_MINT solana.PublicKey
 
 func init() {
-	questing.SetProgramID(solana.MustPublicKeyFromBase58("Cr4keTx8UQiQ5F9TzTGdQ5dkcMHjxhYSAaHkHhUSABCk"))
+	questing.SetProgramID(solana.MustPublicKeyFromBase58("9iMuz8Lf27R9Y2jQhWM1wrSVtPB4Tt5wqkh1opjMTK11"))
 }
 
 func main() {
-	// enable()
-	// verifyBatchUpload()
-	// catalogBatches()
-	// treasure()
-	// list()
-	// verifyList()
-	// treasureCMs()
-	// treasureVerify()
-	// treasureVerifyCM()
-	// mintRare()
-	// holder_nft_metadata()
-	// burn()
+	// CreateNTokenAccountsOfMint(solana.MustPublicKeyFromBase58("6c5EBgbPnpdZgKhXW4uTtcYojXqVNnVQbS2cdCHo8Zmu"), 2)
+	enableQuests()
+	// createQuest()
 
-	// marketCreate()
-	// verifyMarketCreate()
-	// marketList()
-	// verifyMarketList()
-	// marketFulfill()
+	// createStakingQuest()
+	// createQuestReward(1)
+	integrations.CreateNStakingQuests()
+	// integrations.CreateNRewardQuests()
 
-	// GetMarketMintMeta()
-	// GetMarketListingsData()
-
-	// enableVias()
-	// enableViaForRarityToken()
-
-	// CreateNTokenAccountsOfMint(MINT, 2)
-	// enableQuestsAndCreateQuest()
-	// CreateAndAmmendEntitlementQuest()
-	// startQuest()
-	startAndEndQuest()
-	// ETZoY7cJfD8N7EVx5tShRYS1vxgv3F4Dkavjb52kGRyj
-	// treasureVerify()
+	// startAndEndQuest()
 
 	hash := sha256.Sum256([]byte("account:QuestAccount"))
 	encoded := base58.Encode(hash[:8])
 	fmt.Println(string(encoded))
+
+	// GetQuestPdas()
+	// GetQuestsKPIs()
+
+}
+func GetQuestPdas() {
+	rpcClient := rpc.New(utils.NETWORK)
+	oracle, err := solana.PrivateKeyFromSolanaKeygenFile("./oracle.key")
+	if err != nil {
+		panic(err)
+	}
+
+	for i := range make([]int, 7) {
+		questPda, _ := quests.GetQuest(oracle.PublicKey(), uint64(i))
+		questData := quests.GetQuestData(rpcClient, questPda)
+		log.Println(i, questPda, questData)
+	}
+
+}
+
+func GetQuestsKPIs() {
+	rpcClient := rpc.New("https://devnet.genesysgo.net")
+	oracle, err := solana.PrivateKeyFromSolanaKeygenFile("./oracle.key")
+	if err != nil {
+		panic(err)
+	}
+
+	kpis := quest_ops.GetQuested(rpcClient, oracle.PublicKey(), solana.MustPublicKeyFromBase58("J2Y8TpYwpNshLcmnbjp9frPW9wHKRfWf3Yc26SjD1qmv"))
+	j, _ := json.MarshalIndent(kpis, "", "  ")
+	log.Println(string(j))
 
 }
 
@@ -107,21 +119,17 @@ func formatAsJson(data interface{}) {
 	fmt.Println(string(dataJson))
 }
 
-func enableQuestsAndCreateQuest() {
+func enableQuests() {
 	oracle, err := solana.PrivateKeyFromSolanaKeygenFile("./oracle.key")
 	if err != nil {
 		panic(err)
 	}
-
-	signers := make([]solana.PrivateKey, 0)
+	quest_ops.EnableQuests(oracle)
 	rewardsMints := []solana.PrivateKey{
 		solana.NewWallet().PrivateKey,
 		solana.NewWallet().PrivateKey,
 		solana.NewWallet().PrivateKey,
 	}
-	signers = append(signers, rewardsMints...)
-
-	quest_ops.EnableQuests(oracle)
 
 	rewards := []questing.Reward{
 		{
@@ -142,449 +150,418 @@ func enableQuestsAndCreateQuest() {
 	}
 
 	for i, reward := range rewards {
-		quest_ops.RegisterQuestReward(oracle, reward, rewardsMints[i])
+		_, _ = i, reward
+		// quest_ops.RegisterQuestReward(oracle, reward, rewardsMints[i])
 	}
+}
+
+func createStakingQuest() {
+	rpcClient := rpc.New("https://devnet.genesysgo.net")
+	oracle, err := solana.PrivateKeyFromSolanaKeygenFile("./oracle.key")
+	if err != nil {
+		panic(err)
+	}
+
+	stakingRewardIx, stakingMint := quest_ops.RegisterQuestsStakingReward(oracle.PublicKey(), "Not qstApeCoin", "qstNBA")
+	// stakingMint := solana.MustPublicKeyFromBase58("FsJTaKL31xeEPgPf8yFysCTZYj8v4B8Vvc8FSNKw3uLX")
 
 	ixs := make([]solana.Instruction, 0)
 	questData := questing.Quest{
 		Index:           0,
-		Name:            "aaa",
-		Duration:        100,
+		Name:            "Gen1 Quest",
+		Duration:        60 * 5,
 		Oracle:          oracle.PublicKey(),
 		WlCandyMachines: []solana.PublicKey{oracle.PublicKey()},
-		Entitlement:     nil,
 		Tender:          nil,
-		/*
-			Tender: &questing.Tender{
-				MintAddress: MINT,
-				Amount:      5,
+		TenderSplits:    nil,
+		StakingConfig: &questing.StakingConfig{
+			MintAddress:  stakingMint.PublicKey(),
+			YieldPer:     10, // 10 secounds
+			YieldPerTime: 5,  // 5 tokens
+		},
+		PairsConfig: &questing.PairsConfig{
+			Left: LEFT,
+			LeftCreators: [5]solana.PublicKey{
+				solana.MustPublicKeyFromBase58("HRRfCf1Uvak1cqvbXjhH7FcenK3LJxJL3cc2MF8yajBq"),
+				solana.MustPublicKeyFromBase58("HRRfCf1Uvak1cqvbXjhH7FcenK3LJxJL3cc2MF8yajBq"),
+				solana.MustPublicKeyFromBase58("HRRfCf1Uvak1cqvbXjhH7FcenK3LJxJL3cc2MF8yajBq"),
+				solana.MustPublicKeyFromBase58("HRRfCf1Uvak1cqvbXjhH7FcenK3LJxJL3cc2MF8yajBq"),
+				solana.MustPublicKeyFromBase58("HRRfCf1Uvak1cqvbXjhH7FcenK3LJxJL3cc2MF8yajBq"),
 			},
-		*/
+			Right: RIGHT,
+			RightCreators: [5]solana.PublicKey{
+				solana.MustPublicKeyFromBase58("HRRfCf1Uvak1cqvbXjhH7FcenK3LJxJL3cc2MF8yajBq"),
+				solana.MustPublicKeyFromBase58("HRRfCf1Uvak1cqvbXjhH7FcenK3LJxJL3cc2MF8yajBq"),
+				solana.MustPublicKeyFromBase58("HRRfCf1Uvak1cqvbXjhH7FcenK3LJxJL3cc2MF8yajBq"),
+				solana.MustPublicKeyFromBase58("HRRfCf1Uvak1cqvbXjhH7FcenK3LJxJL3cc2MF8yajBq"),
+				solana.MustPublicKeyFromBase58("HRRfCf1Uvak1cqvbXjhH7FcenK3LJxJL3cc2MF8yajBq"),
+			},
+		},
 	}
-	ix, questIndex := quest_ops.CreateQuest(oracle.PublicKey(), questData)
-	questData.Index = questIndex
-	ixs = append(ixs, ix)
 
-	rewardIxs := ops.AppendQuestRewards(oracle.PublicKey(), questData)
-	ixs = append(ixs, rewardIxs...)
+	creationIx, questIndex := quest_ops.CreateQuest(rpcClient, oracle.PublicKey(), questData)
+	ixs = append(ixs, creationIx)
+	ixs = append(ixs, stakingRewardIx)
 
 	utils.SendTx(
 		"list",
 		ixs,
-		append(signers, oracle),
+		append(make([]solana.PrivateKey, 0), oracle, stakingMint),
+		// append(make([]solana.PrivateKey, 0), oracle),
 		oracle.PublicKey(),
 	)
-
-	{
-		questsPda, _ := quests.GetQuests(oracle.PublicKey())
-		questsData := quests.GetQuestsData(questsPda)
-		quest, _ := quests.GetQuest(oracle.PublicKey(), questsData.Quests-1)
-		fmt.Println(quest, questsData.Quests, questsData.Quests-1)
-		questData := quests.GetQuestData(quest)
-		{
-			questDataJson, _ := json.MarshalIndent(questData, "", "  ")
-			fmt.Println(string(questDataJson))
-		}
-
+	rewardsMints := []solana.PrivateKey{
+		solana.NewWallet().PrivateKey,
 	}
+
+	rewards := []questing.Reward{
+		{
+			MintAddress: rewardsMints[0].PublicKey(),
+			Threshold:   50,
+			Amount:      10,
+		},
+	}
+
+	for i, reward := range rewards {
+		_, _ = i, reward
+		_ = questIndex
+		// quest_ops.RegisterQuestReward(oracle, questIndex, reward, rewardsMints[i])
+	}
+
 }
-func CreateAndAmmendEntitlementQuest() {
+
+func createQuest() {
+	rpcClient := rpc.New("https://devnet.genesysgo.net")
 	oracle, err := solana.PrivateKeyFromSolanaKeygenFile("./oracle.key")
 	if err != nil {
 		panic(err)
 	}
 
-	ix, _ := quest_ops.CreateQuest(oracle.PublicKey(), questing.Quest{
+	tenderMint := solana.MustPublicKeyFromBase58("62crD8aYknDsrsEyLrqM7YWwPZtaPbW9SzoDtifpd1dY")
+	tenderMintMeta, _ := utils.GetTokensMetadataData(rpcClient, []solana.PublicKey{tenderMint})
+
+	ixs := make([]solana.Instruction, 0)
+	questData := questing.Quest{
 		Index:           0,
-		Name:            "aaa",
-		Duration:        100,
+		Name:            "Gen2 WL Quest",
+		Duration:        60 * 15,
 		Oracle:          oracle.PublicKey(),
 		WlCandyMachines: []solana.PublicKey{oracle.PublicKey()},
-		Entitlement:     nil,
 		Tender: &questing.Tender{
-			MintAddress: MINT,
-			Amount:      5,
+			MintAddress: tenderMint,
+			Amount:      utils.ConvertUiAmountToAmount(float64(5), tenderMintMeta[tenderMint].Decimals),
 		},
-	})
+		TenderSplits: &[]questing.Split{
+			{
+				TokenAddress: solana.PublicKey{},
+				OpCode:       0,
+				Share:        100,
+			},
+		},
+		StakingConfig: nil,
+		PairsConfig: &questing.PairsConfig{
+			Left: LEFT,
+			LeftCreators: [5]solana.PublicKey{
+				solana.MustPublicKeyFromBase58("HRRfCf1Uvak1cqvbXjhH7FcenK3LJxJL3cc2MF8yajBq"),
+				solana.MustPublicKeyFromBase58("HRRfCf1Uvak1cqvbXjhH7FcenK3LJxJL3cc2MF8yajBq"),
+				solana.MustPublicKeyFromBase58("HRRfCf1Uvak1cqvbXjhH7FcenK3LJxJL3cc2MF8yajBq"),
+				solana.MustPublicKeyFromBase58("HRRfCf1Uvak1cqvbXjhH7FcenK3LJxJL3cc2MF8yajBq"),
+				solana.MustPublicKeyFromBase58("HRRfCf1Uvak1cqvbXjhH7FcenK3LJxJL3cc2MF8yajBq"),
+			},
+			Right: RIGHT,
+			RightCreators: [5]solana.PublicKey{
+				solana.MustPublicKeyFromBase58("CM3ZXwWgJp6ec7BTEGreQZAhtNmaUfhZRMuR3QVidGyx"),
+				solana.MustPublicKeyFromBase58("CM3ZXwWgJp6ec7BTEGreQZAhtNmaUfhZRMuR3QVidGyx"),
+				solana.MustPublicKeyFromBase58("CM3ZXwWgJp6ec7BTEGreQZAhtNmaUfhZRMuR3QVidGyx"),
+				solana.MustPublicKeyFromBase58("CM3ZXwWgJp6ec7BTEGreQZAhtNmaUfhZRMuR3QVidGyx"),
+				solana.MustPublicKeyFromBase58("CM3ZXwWgJp6ec7BTEGreQZAhtNmaUfhZRMuR3QVidGyx"),
+			},
+		},
+	}
+	creationIx, questIndex := quest_ops.CreateQuest(rpcClient, oracle.PublicKey(), questData)
+	ixs = append(ixs, creationIx)
+
 	utils.SendTx(
 		"list",
-		append(make([]solana.Instruction, 0), ix),
+		ixs,
 		append(make([]solana.PrivateKey, 0), oracle),
+		// append(make([]solana.PrivateKey, 0), oracle),
 		oracle.PublicKey(),
 	)
-
-	{
-		questsPda, _ := quests.GetQuests(oracle.PublicKey())
-		questsData := quests.GetQuestsData(questsPda)
-		quest, _ := quests.GetQuest(oracle.PublicKey(), questsData.Quests-1)
-		fmt.Println(quest, questsData.Quests)
-		questData := quests.GetQuestData(quest)
-		{
-			questDataJson, _ := json.MarshalIndent(questData, "", "  ")
-			fmt.Println(string(questDataJson))
-		}
-
-		{
-			quest_ops.AmmendQuestWithEntitlement(
-				oracle,
-				*questData,
-				questing.Reward{
-					MintAddress: solana.MustPublicKeyFromBase58("ETZoY7cJfD8N7EVx5tShRYS1vxgv3F4Dkavjb52kGRyj"),
-					Amount:      50,
-				},
-			)
-		}
+	rewardsMints := []solana.PrivateKey{
+		solana.NewWallet().PrivateKey,
 	}
-	{
-		questsPda, _ := quests.GetQuests(oracle.PublicKey())
-		questsData := quests.GetQuestsData(questsPda)
-		quest, _ := quests.GetQuest(oracle.PublicKey(), questsData.Quests-1)
-		questData := quests.GetQuestData(quest)
+
+	rewards := []questing.Reward{
 		{
-			questDataJson, _ := json.MarshalIndent(questData, "", "  ")
-			fmt.Println(string(questDataJson))
-		}
+			MintAddress: rewardsMints[0].PublicKey(),
+			Threshold:   50,
+			Amount:      10,
+		},
 	}
+
+	for i, reward := range rewards {
+		quest_ops.RegisterQuestReward(oracle, questIndex, reward, rewardsMints[i], "Not qstNBAGen2 Whitelist", "qstNBAG2WL")
+	}
+
 }
 
-func enrollQuestor() {
+func createQuestReward(questIndex uint64) {
 	oracle, err := solana.PrivateKeyFromSolanaKeygenFile("./oracle.key")
 	if err != nil {
 		panic(err)
 	}
-	pixelBallzMint := solana.MustPublicKeyFromBase58("7zaCj11reNw4FMxY5UqR8mjNdatgB4vgdN17eKAwMGie")
 
-	_, _ = oracle, pixelBallzMint
-}
-
-func startQuest() {
-	oracle, err := solana.PrivateKeyFromSolanaKeygenFile("./oracle.key")
-	if err != nil {
-		panic(err)
+	rewardsMints := []solana.PrivateKey{
+		solana.NewWallet().PrivateKey,
 	}
-	for range make([]int, 2) {
-		var instructions []solana.Instruction
 
-		pixelBallzMint := solana.NewWallet()
-		pixelBallzTokenAddress, _ := utils.GetTokenWallet(oracle.PublicKey(), pixelBallzMint.PublicKey())
-		// ballzMint := solana.MustPublicKeyFromBase58("6NGcNWFVksoeXf1xgAvKubQgS6rW5EZ2oVwqAa1eHySz")
-		// ballzTokenAddress := solana.MustPublicKeyFromBase58("57hobyD843HjijKTLAbiKcfPCdBY3bdDPgvKR4ggoGaz")
-		// pixelBallzMint := solana.MustPublicKeyFromBase58("7zaCj11reNw4FMxY5UqR8mjNdatgB4vgdN17eKAwMGie")
-		// pixelBallTokenAddress := solana.MustPublicKeyFromBase58("DpXfu5sQpfGM2wSRPq1nUs4iKqVkjSwCehDrErhysZLP")
+	rewards := []questing.Reward{
 		{
-
-			client := rpc.New(NETWORK)
-			min, err := client.GetMinimumBalanceForRentExemption(context.TODO(), token.MINT_SIZE, rpc.CommitmentFinalized)
-			if err != nil {
-				panic(err)
-			}
-
-			instructions = append(instructions,
-				system.NewCreateAccountInstructionBuilder().
-					SetOwner(token.ProgramID).
-					SetNewAccount(pixelBallzMint.PublicKey()).
-					SetSpace(token.MINT_SIZE).
-					SetFundingAccount(oracle.PublicKey()).
-					SetLamports(min).
-					Build(),
-
-				token.NewInitializeMint2InstructionBuilder().
-					SetMintAccount(pixelBallzMint.PublicKey()).
-					SetDecimals(0).
-					SetMintAuthority(oracle.PublicKey()).
-					SetFreezeAuthority(oracle.PublicKey()).
-					Build(),
-
-				atok.NewCreateInstructionBuilder().
-					SetPayer(oracle.PublicKey()).
-					SetWallet(oracle.PublicKey()).
-					SetMint(pixelBallzMint.PublicKey()).
-					Build(),
-
-				token.NewMintToInstructionBuilder().
-					SetMintAccount(pixelBallzMint.PublicKey()).
-					SetDestinationAccount(pixelBallzTokenAddress).
-					SetAuthorityAccount(oracle.PublicKey()).
-					SetAmount(1).
-					Build(),
-			)
-		}
-		utils.SendTx(
-			"list",
-			instructions,
-			append(make([]solana.PrivateKey, 0), oracle, pixelBallzMint.PrivateKey),
-			oracle.PublicKey(),
-		)
-
-		/*
-			fmt.Println("sleeping")
-			time.Sleep(15 * time.Second)
-		*/
-
-		questInstructions := make([]solana.Instruction, 0)
-
-		questor, _ := quests.GetQuestorAccount(oracle.PublicKey())
-		questorData := quests.GetQuestorData(questor)
-		if questorData == nil {
-			questInstructions = append(
-				questInstructions,
-				ops.EnrollQuestor(oracle.PublicKey()),
-			)
-		}
-
-		questee, _ := quests.GetQuesteeAccount(pixelBallzMint.PublicKey())
-		questeeData := quests.GetQuesteeData(questee)
-		if questeeData == nil {
-			questInstructions = append(
-				questInstructions,
-				ops.EnrollQuestee(oracle.PublicKey(), pixelBallzMint.PublicKey(), pixelBallzTokenAddress),
-			)
-		}
-
-		questPda, _ := quests.GetQuest(oracle.PublicKey(), 3)
-		questAccount, _ := quests.GetQuestAccount(questor, questee, questPda)
-		questDeposit, _ := quests.GetQuestDepositTokenAccount(questee, questPda)
-
-		questData := quests.GetQuestData(questPda)
-
-		startQuestIx := questing.NewStartQuestInstructionBuilder().
-			SetDepositTokenAccountAccount(questDeposit).
-			SetInitializerAccount(oracle.PublicKey()).
-			SetPixelballzMintAccount(pixelBallzMint.PublicKey()).
-			SetPixelballzTokenAccountAccount(pixelBallzTokenAddress).
-			SetQuestAccAccount(questAccount).
-			SetQuestAccount(questPda).
-			SetQuesteeAccount(questee).
-			SetQuestorAccount(questor).
-			SetRentAccount(solana.SysVarRentPubkey).
-			SetSystemProgramAccount(solana.SystemProgramID).
-			SetTokenProgramAccount(solana.TokenProgramID)
-
-		if questData.Tender != nil && questData.TenderSplits != nil {
-			tenderTokenAccount, _ := utils.GetTokenWallet(oracle.PublicKey(), questData.Tender.MintAddress)
-			startQuestIx.Append(&solana.AccountMeta{tenderTokenAccount, true, false})
-			for _, tenderSplit := range *questData.TenderSplits {
-				startQuestIx.Append(&solana.AccountMeta{tenderSplit.TokenAddress, true, false})
-			}
-		}
-
-		if err = startQuestIx.Validate(); err != nil {
-			panic(err)
-		} else {
-			questInstructions = append(
-				questInstructions,
-				startQuestIx.Build(),
-			)
-		}
-
-		utils.SendTx(
-			"init cm",
-			questInstructions,
-			append(make([]solana.PrivateKey, 0), oracle),
-			oracle.PublicKey(),
-		)
+			MintAddress: rewardsMints[0].PublicKey(),
+			Threshold:   50,
+			Amount:      10,
+		},
 	}
+
+	for i, reward := range rewards {
+		quest_ops.RegisterQuestReward(oracle, questIndex, reward, rewardsMints[i], "Not qstNBAGen2 Whitelist", "qstNBAG2WL")
+	}
+
 }
 
 func startAndEndQuest() {
+	rpcClient := rpc.New("https://devnet.genesysgo.net")
 	oracle, err := solana.PrivateKeyFromSolanaKeygenFile("./oracle.key")
 	if err != nil {
 		panic(err)
 	}
-	{
-		questsPda, _ := quests.GetQuests(oracle.PublicKey())
-		questsData := quests.GetQuestsData(questsPda)
-		quest, _ := quests.GetQuest(oracle.PublicKey(), questsData.Quests-1)
-		questData := quests.GetQuestData(quest)
-		{
-			questDataJson, _ := json.MarshalIndent(questData, "", "  ")
-			fmt.Println(string(questDataJson))
-		}
+	questsPda, _ := quests.GetQuests(oracle.PublicKey())
+	questsData := quests.GetQuestsData(rpcClient, questsPda)
+	questPda, _ := quests.GetQuest(oracle.PublicKey(), questsData.Quests-1)
+
+	nfts := make([]solana.PrivateKey, 0)
+	for range make([]int, LEFT+RIGHT) {
+		nfts = append(nfts, solana.NewWallet().PrivateKey)
 	}
 
-	pixelBallzMint := solana.NewWallet()
-	pixelBallzTokenAddress, _ := utils.GetTokenWallet(oracle.PublicKey(), pixelBallzMint.PublicKey())
-	// ballzMint := solana.MustPublicKeyFromBase58("6NGcNWFVksoeXf1xgAvKubQgS6rW5EZ2oVwqAa1eHySz")
-	// ballzTokenAddress := solana.MustPublicKeyFromBase58("57hobyD843HjijKTLAbiKcfPCdBY3bdDPgvKR4ggoGaz")
-	// pixelBallzMint := solana.MustPublicKeyFromBase58("7zaCj11reNw4FMxY5UqR8mjNdatgB4vgdN17eKAwMGie")
-	// pixelBallTokenAddress := solana.MustPublicKeyFromBase58("DpXfu5sQpfGM2wSRPq1nUs4iKqVkjSwCehDrErhysZLP")
+	questRecorder, _ := quests.GetQuestRecorder(questPda, oracle.PublicKey())
+
 	{
-		var instructions []solana.Instruction
-		{
+		{ //@Mint-NFTs
+			for i := range nfts {
+				pixelBallzMint := nfts[i]
+				pixelBallzTokenAddress, _ := utils.GetTokenWallet(oracle.PublicKey(), pixelBallzMint.PublicKey())
+				var instructions []solana.Instruction
 
-			client := rpc.New(NETWORK)
-			min, err := client.GetMinimumBalanceForRentExemption(context.TODO(), token.MINT_SIZE, rpc.CommitmentFinalized)
-			if err != nil {
-				panic(err)
+				client := rpc.New(NETWORK)
+				min, err := client.GetMinimumBalanceForRentExemption(context.TODO(), token.MINT_SIZE, rpc.CommitmentFinalized)
+				if err != nil {
+					panic(err)
+				}
+
+				instructions = append(instructions,
+					system.NewCreateAccountInstructionBuilder().
+						SetOwner(token.ProgramID).
+						SetNewAccount(pixelBallzMint.PublicKey()).
+						SetSpace(token.MINT_SIZE).
+						SetFundingAccount(oracle.PublicKey()).
+						SetLamports(min).
+						Build(),
+
+					token.NewInitializeMint2InstructionBuilder().
+						SetMintAccount(pixelBallzMint.PublicKey()).
+						SetDecimals(0).
+						SetMintAuthority(oracle.PublicKey()).
+						SetFreezeAuthority(oracle.PublicKey()).
+						Build(),
+
+					atok.NewCreateInstructionBuilder().
+						SetPayer(oracle.PublicKey()).
+						SetWallet(oracle.PublicKey()).
+						SetMint(pixelBallzMint.PublicKey()).
+						Build(),
+
+					token.NewMintToInstructionBuilder().
+						SetMintAccount(pixelBallzMint.PublicKey()).
+						SetDestinationAccount(pixelBallzTokenAddress).
+						SetAuthorityAccount(oracle.PublicKey()).
+						SetAmount(1).
+						Build(),
+				)
+				utils.SendTx(
+					"list",
+					instructions,
+					append(make([]solana.PrivateKey, 0), oracle, pixelBallzMint),
+					oracle.PublicKey(),
+				)
 			}
-
-			instructions = append(instructions,
-				system.NewCreateAccountInstructionBuilder().
-					SetOwner(token.ProgramID).
-					SetNewAccount(pixelBallzMint.PublicKey()).
-					SetSpace(token.MINT_SIZE).
-					SetFundingAccount(oracle.PublicKey()).
-					SetLamports(min).
-					Build(),
-
-				token.NewInitializeMint2InstructionBuilder().
-					SetMintAccount(pixelBallzMint.PublicKey()).
-					SetDecimals(0).
-					SetMintAuthority(oracle.PublicKey()).
-					SetFreezeAuthority(oracle.PublicKey()).
-					Build(),
-
-				atok.NewCreateInstructionBuilder().
-					SetPayer(oracle.PublicKey()).
-					SetWallet(oracle.PublicKey()).
-					SetMint(pixelBallzMint.PublicKey()).
-					Build(),
-
-				token.NewMintToInstructionBuilder().
-					SetMintAccount(pixelBallzMint.PublicKey()).
-					SetDestinationAccount(pixelBallzTokenAddress).
-					SetAuthorityAccount(oracle.PublicKey()).
-					SetAmount(1).
-					Build(),
-			)
 		}
-		utils.SendTx(
-			"list",
-			instructions,
-			append(make([]solana.PrivateKey, 0), oracle, pixelBallzMint.PrivateKey),
-			oracle.PublicKey(),
-		)
 
 		/*
 		   fmt.Println("sleeping")
 		   time.Sleep(15 * time.Second)
 		*/
 
-		questInstructions := make([]solana.Instruction, 0)
+		{ //@Land-Quest
+			// create quest recorder
+			var instructions = make([]solana.Instruction, 0)
 
-		questor, _ := quests.GetQuestorAccount(oracle.PublicKey())
-		questorData := quests.GetQuestorData(questor)
-		if questorData == nil {
-			questInstructions = append(
-				questInstructions,
-				ops.EnrollQuestor(oracle.PublicKey()),
-			)
-		}
+			createQuestRecorderIx := quest_ops.RegisterQuestRecorder(rpcClient, oracle.PublicKey(), questPda)
+			if createQuestRecorderIx != nil {
 
-		questee, _ := quests.GetQuesteeAccount(pixelBallzMint.PublicKey())
-		questeeData := quests.GetQuesteeData(questee)
-		if questeeData == nil {
-			questInstructions = append(
-				questInstructions,
-				ops.EnrollQuestee(oracle.PublicKey(), pixelBallzMint.PublicKey(), pixelBallzTokenAddress),
-			)
-		}
+				instructions = append(instructions, createQuestRecorderIx)
 
-		questPda, _ := quests.GetQuest(oracle.PublicKey(), 0)
-		questAccount, _ := quests.GetQuestAccount(questor, questee, questPda)
-		questDeposit, _ := quests.GetQuestDepositTokenAccount(questee, questPda)
+				utils.SendTx(
+					"list",
+					instructions,
+					append(make([]solana.PrivateKey, 0), oracle),
+					oracle.PublicKey(),
+				)
 
-		questData := quests.GetQuestData(questPda)
-
-		startQuestIx := questing.NewStartQuestInstructionBuilder().
-			SetDepositTokenAccountAccount(questDeposit).
-			SetInitializerAccount(oracle.PublicKey()).
-			SetPixelballzMintAccount(pixelBallzMint.PublicKey()).
-			SetPixelballzTokenAccountAccount(pixelBallzTokenAddress).
-			SetQuestAccAccount(questAccount).
-			SetQuestAccount(questPda).
-			SetQuesteeAccount(questee).
-			SetQuestorAccount(questor).
-			SetRentAccount(solana.SysVarRentPubkey).
-			SetSystemProgramAccount(solana.SystemProgramID).
-			SetTokenProgramAccount(solana.TokenProgramID)
-
-		if questData.Tender != nil && questData.TenderSplits != nil {
-			tenderTokenAccount, _ := utils.GetTokenWallet(oracle.PublicKey(), questData.Tender.MintAddress)
-			startQuestIx.Append(&solana.AccountMeta{PublicKey: tenderTokenAccount, IsWritable: true, IsSigner: false})
-			for _, tenderSplit := range *questData.TenderSplits {
-				startQuestIx.Append(&solana.AccountMeta{PublicKey: tenderSplit.TokenAddress, IsWritable: true, IsSigner: false})
 			}
 		}
 
-		if err = startQuestIx.Validate(); err != nil {
-			panic(err)
-		} else {
-			questInstructions = append(
-				questInstructions,
-				startQuestIx.Build(),
+		{ //@Affirm-Quest
+			// propose quest
+			var instructions = make([]solana.Instruction, 0)
+
+			depositingLeft := func() []solana.PublicKey {
+				left := make([]solana.PublicKey, 0)
+				for _, mint := range nfts[0:LEFT] {
+					left = append(left, mint.PublicKey())
+				}
+				return left
+			}()
+			depositingRight := func() []solana.PublicKey {
+				right := make([]solana.PublicKey, 0)
+				for _, mint := range nfts[LEFT:] {
+					right = append(right, mint.PublicKey())
+				}
+				return right
+			}()
+
+			questRecorderData := quests.GetQuestRecorderData(rpcClient, questRecorder)
+			questProposalIndex := questRecorderData.Proposals
+			questProposal, questProposalBump := quests.GetQuestProposal(questPda, oracle.PublicKey(), questProposalIndex)
+
+			zero := uint64(0)
+			questProposalIx, _ := quest_ops.NewQuestProposal(rpcClient, oracle.PublicKey(), questPda, depositingLeft, depositingRight, &zero)
+
+			instructions = append(instructions, questProposalIx)
+
+			for i, nft := range nfts {
+				nftTokenAccount, _ := utils.GetTokenWallet(oracle.PublicKey(), nft.PublicKey())
+
+				enterIx := questing.NewEnterQuestInstructionBuilder().
+					SetInitializerAccount(oracle.PublicKey()).
+					SetPixelballzTokenAccountAccount(nftTokenAccount).
+					SetQuestAccount(questPda).
+					SetQuestProposalAccount(questProposal).
+					SetQuestProposalBump(questProposalBump).
+					SetQuestProposalIndex(questProposalIndex).
+					SetRentAccount(solana.SysVarRentPubkey).
+					SetSystemProgramAccount(solana.SystemProgramID).
+					SetTokenProgramAccount(solana.TokenProgramID)
+
+				if LEFT > i {
+					enterIx.SetSideEnum("left")
+				}
+				if LEFT <= i {
+					enterIx.SetSideEnum("right")
+				}
+
+				instructions = append(instructions, enterIx.Build())
+			}
+
+			utils.SendTx(
+				"list",
+				instructions,
+				append(make([]solana.PrivateKey, 0), oracle),
+				oracle.PublicKey(),
 			)
 		}
 
-		utils.SendTx(
-			"init cm",
-			questInstructions,
-			append(make([]solana.PrivateKey, 0), oracle),
-			oracle.PublicKey(),
-		)
-	}
-	fmt.Println("Sleeping...")
-	time.Sleep(5 * time.Second)
-	fmt.Println("Slept")
-	{
-		questInstructions := make([]solana.Instruction, 0)
+		{ //@Start-Quest
+			questRecorderData := quests.GetQuestRecorderData(rpcClient, questRecorder)
 
-		questor, _ := quests.GetQuestorAccount(oracle.PublicKey())
+			questInstructions := make([]solana.Instruction, 0)
 
-		questee, _ := quests.GetQuesteeAccount(pixelBallzMint.PublicKey())
+			startQuestIx := quest_ops.StartQuest(rpcClient, oracle.PublicKey(), questPda, questRecorderData.Proposals-1)
 
-		questPda, questPdaBump := quests.GetQuest(oracle.PublicKey(), 0)
-		questAccount, _ := quests.GetQuestAccount(questor, questee, questPda)
-		questDeposit, questDepositBump := quests.GetQuestDepositTokenAccount(questee, questPda)
-		questQuesteeReceipt, _ := quests.GetQuestQuesteeReceiptAccount(questor, questee, questPda)
-
-		endQuestIx := questing.NewEndQuestInstructionBuilder().
-			SetAssociatedTokenProgramAccount(solana.SPLAssociatedTokenAccountProgramID).
-			SetDepositTokenAccountAccount(questDeposit).
-			SetDepositTokenAccountBump(questDepositBump).
-			SetInitializerAccount(oracle.PublicKey()).
-			SetOracleAccount(oracle.PublicKey()).
-			SetPixelballzMintAccount(pixelBallzMint.PublicKey()).
-			SetPixelballzTokenAccountAccount(pixelBallzTokenAddress).
-			SetQuestAccAccount(questAccount).
-			SetQuestAccount(questPda).
-			SetQuesteeAccount(questee).
-			SetQuestorAccount(questor).
-			SetQuestQuesteeReceiptAccount(questQuesteeReceipt).
-			SetRentAccount(solana.SysVarRentPubkey).
-			SetQuestBump(questPdaBump).
-			SetSlotHashesAccount(solana.MustPublicKeyFromBase58("SysvarS1otHashes111111111111111111111111111")).
-			SetSystemProgramAccount(solana.SystemProgramID).
-			SetTokenProgramAccount(solana.TokenProgramID)
-
-		questData := quests.GetQuestData(questPda)
-		rewardMints := make([]solana.AccountMeta, 0)
-		rewardAtas := make([]solana.AccountMeta, 0)
-		fmt.Println("---------", len(endQuestIx.AccountMetaSlice))
-		for _, reward := range questData.Rewards {
-			endQuestIx.Append(&solana.AccountMeta{PublicKey: reward.MintAddress, IsWritable: true, IsSigner: false})
-		}
-		for _, reward := range questData.Rewards {
-			rewardAta, _ := utils.GetTokenWallet(oracle.PublicKey(), reward.MintAddress)
-			endQuestIx.Append(&solana.AccountMeta{PublicKey: rewardAta, IsWritable: true, IsSigner: false})
-		}
-
-		if err = endQuestIx.Validate(); err != nil {
-			panic(err)
-		} else {
-			fmt.Println("---------", len(endQuestIx.AccountMetaSlice), len(rewardMints), len(rewardAtas))
 			questInstructions = append(
 				questInstructions,
-				endQuestIx.Build(),
+				startQuestIx,
+			)
+
+			utils.SendTx(
+				"init cm",
+				questInstructions,
+				append(make([]solana.PrivateKey, 0), oracle),
+				oracle.PublicKey(),
+			)
+
+		}
+
+		{ //@Claim-Quest-Reward
+			fmt.Println("sleeping...")
+			time.Sleep(10 * time.Second)
+			questRecorderData := quests.GetQuestRecorderData(rpcClient, questRecorder)
+
+			questInstructions := make([]solana.Instruction, 0)
+
+			claimIx := quest_ops.ClaimQuestStakingReward(rpcClient, oracle.PublicKey(), questPda, questRecorderData.Proposals-1)
+
+			questInstructions = append(
+				questInstructions,
+				claimIx,
+			)
+
+			utils.SendTx(
+				"init cm",
+				questInstructions,
+				append(make([]solana.PrivateKey, 0), oracle),
+				oracle.PublicKey(),
+			)
+
+		}
+
+		{ //@End-Quest
+			questRecorderData := quests.GetQuestRecorderData(rpcClient, questRecorder)
+
+			questInstructions := make([]solana.Instruction, 0)
+
+			endQuestIx := quest_ops.EndQuest(rpcClient, oracle.PublicKey(), questPda, questRecorderData.Proposals-1)
+
+			questInstructions = append(
+				questInstructions,
+				endQuestIx,
+			)
+
+			utils.SendTx(
+				"init cm",
+				questInstructions,
+				append(make([]solana.PrivateKey, 0), oracle),
+				oracle.PublicKey(),
+			)
+
+		}
+
+		{ //@Flush-Quest
+			var instructions = make([]solana.Instruction, 0)
+
+			questRecorderData := quests.GetQuestRecorderData(rpcClient, questRecorder)
+			questProposalIndex := questRecorderData.Proposals - 1
+
+			instructions = append(instructions, quest_ops.FlushQuestRecord(rpcClient, oracle.PublicKey(), questPda, questProposalIndex)...)
+
+			utils.SendTx(
+				"list",
+				instructions,
+				append(make([]solana.PrivateKey, 0), oracle),
+				oracle.PublicKey(),
 			)
 		}
 
-		utils.SendTx(
-			"init cm",
-			questInstructions,
-			append(make([]solana.PrivateKey, 0), oracle),
-			oracle.PublicKey(),
-		)
 	}
-
 }
